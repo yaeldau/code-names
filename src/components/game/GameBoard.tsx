@@ -220,7 +220,7 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
             'w-full rounded-xl py-3 text-sm font-semibold transition-colors',
             endTurnPending
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gray-900 text-white hover:bg-gray-700 active:bg-gray-800',
+              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 active:bg-gray-100',
           ].join(' ')}
         >
           {endTurnPending ? 'מעביר תור...' : 'סיים תור'}
