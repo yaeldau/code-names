@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { revealCard, endTurn } from '@/app/actions'
 import GameCard from './GameCard'
 import SharePanel from './SharePanel'
-import type { Card, Game } from '@/types/game'
+import type { Card, Game, Team } from '@/types/game'
 
 interface GameBoardProps {
   initialGame: Game
@@ -15,11 +15,43 @@ interface GameBoardProps {
 
 const TEAM_LABEL: Record<string, string> = { red: 'אדום', blue: 'כחול' }
 
+function deriveGameUpdates(game: Game, card: Card): Partial<Game> {
+  const opponent: Team = game.current_team === 'red' ? 'blue' : 'red'
+  const updates: Partial<Game> = {}
+
+  if (card.type === 'assassin') {
+    updates.status = 'finished'
+    updates.winner = opponent
+  } else {
+    if (card.type === 'red') updates.red_remaining = game.red_remaining - 1
+    if (card.type === 'blue') updates.blue_remaining = game.blue_remaining - 1
+
+    const redLeft = updates.red_remaining ?? game.red_remaining
+    const blueLeft = updates.blue_remaining ?? game.blue_remaining
+
+    if (redLeft === 0) {
+      updates.status = 'finished'
+      updates.winner = 'red'
+    } else if (blueLeft === 0) {
+      updates.status = 'finished'
+      updates.winner = 'blue'
+    } else if (card.type !== game.current_team) {
+      updates.current_team = opponent
+    }
+  }
+
+  return updates
+}
+
 export default function GameBoard({ initialGame, initialCards, isSpymaster }: GameBoardProps) {
   const [game, setGame] = useState<Game>(initialGame)
   const [cards, setCards] = useState<Card[]>(initialCards)
   const [, startTransition] = useTransition()
   const supabase = useMemo(() => createClient(), [])
+
+  // Keep a ref to latest state so realtime handlers avoid stale closures
+  const stateRef = useRef({ game, cards })
+  useEffect(() => { stateRef.current = { game, cards } }, [game, cards])
 
   useEffect(() => {
     const channel = supabase
@@ -28,18 +60,41 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'cards', filter: `game_id=eq.${game.id}` },
         (payload) => {
+          const newCard = payload.new as Card
+          const { game: g, cards: cs } = stateRef.current
+          const wasAlreadyRevealed = cs.find((c) => c.id === newCard.id)?.revealed ?? false
+
           setCards((prev) =>
-            prev.map((c) =>
-              c.id === (payload.new as Card).id ? { ...c, ...(payload.new as Card) } : c
-            )
+            prev.map((c) => (c.id === newCard.id ? { ...c, ...newCard } : c))
           )
+
+          // Derive game state from the card event directly so turn/score update
+          // in the same render as the card flip — no hop, no delay for any player.
+          // Skip if we already applied this optimistically (wasAlreadyRevealed = true).
+          if (newCard.revealed && !wasAlreadyRevealed) {
+            const updates = deriveGameUpdates(g, newCard)
+            if (Object.keys(updates).length > 0) {
+              setGame((prev) => ({ ...prev, ...updates }))
+            }
+          }
         }
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${game.id}` },
         (payload) => {
-          setGame((prev) => ({ ...prev, ...(payload.new as Game) }))
+          const newGame = payload.new as Game
+          const { game: g } = stateRef.current
+          // Only apply games realtime for end_turn (current_team changed but no card
+          // was revealed) or as a safety sync for anything we might have missed.
+          // Ignore if our local state already shows the incoming values.
+          if (
+            newGame.current_team !== g.current_team ||
+            newGame.status !== g.status ||
+            newGame.winner !== g.winner
+          ) {
+            setGame((prev) => ({ ...prev, ...newGame }))
+          }
         }
       )
       .subscribe()
@@ -52,36 +107,11 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
     const card = cards.find((c) => c.id === cardId)
     if (!card || card.revealed) return
 
-    // Optimistically flip the card
+    // Optimistic: flip card and update game state instantly
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, revealed: true } : c)))
-
-    // Optimistically compute the full game state so every outcome is instant
-    const opponent = game.current_team === 'red' ? 'blue' : 'red'
-    const gameUpdate: Partial<Game> = {}
-
-    if (card.type === 'assassin') {
-      gameUpdate.status = 'finished'
-      gameUpdate.winner = opponent
-    } else {
-      if (card.type === 'red') gameUpdate.red_remaining = game.red_remaining - 1
-      if (card.type === 'blue') gameUpdate.blue_remaining = game.blue_remaining - 1
-
-      const redLeft = gameUpdate.red_remaining ?? game.red_remaining
-      const blueLeft = gameUpdate.blue_remaining ?? game.blue_remaining
-
-      if (redLeft === 0) {
-        gameUpdate.status = 'finished'
-        gameUpdate.winner = 'red'
-      } else if (blueLeft === 0) {
-        gameUpdate.status = 'finished'
-        gameUpdate.winner = 'blue'
-      } else if (card.type !== game.current_team) {
-        gameUpdate.current_team = opponent
-      }
-    }
-
-    if (Object.keys(gameUpdate).length > 0) {
-      setGame((prev) => ({ ...prev, ...gameUpdate }))
+    const updates = deriveGameUpdates(game, card)
+    if (Object.keys(updates).length > 0) {
+      setGame((prev) => ({ ...prev, ...updates }))
     }
 
     startTransition(() => revealCard(cardId, game.id))
@@ -133,7 +163,7 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
         ))}
       </div>
 
-      {/* End turn — only for operatives during active game */}
+      {/* End turn */}
       {!isFinished && !isSpymaster && (
         <button
           onClick={handleEndTurn}
