@@ -49,8 +49,41 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
 
   function handleReveal(cardId: string) {
     if (game.status !== 'active') return
-    // Optimistic update — flip the card immediately, server confirms in background
+    const card = cards.find((c) => c.id === cardId)
+    if (!card || card.revealed) return
+
+    // Optimistically flip the card
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, revealed: true } : c)))
+
+    // Optimistically compute the full game state so every outcome is instant
+    const opponent = game.current_team === 'red' ? 'blue' : 'red'
+    const gameUpdate: Partial<Game> = {}
+
+    if (card.type === 'assassin') {
+      gameUpdate.status = 'finished'
+      gameUpdate.winner = opponent
+    } else {
+      if (card.type === 'red') gameUpdate.red_remaining = game.red_remaining - 1
+      if (card.type === 'blue') gameUpdate.blue_remaining = game.blue_remaining - 1
+
+      const redLeft = gameUpdate.red_remaining ?? game.red_remaining
+      const blueLeft = gameUpdate.blue_remaining ?? game.blue_remaining
+
+      if (redLeft === 0) {
+        gameUpdate.status = 'finished'
+        gameUpdate.winner = 'red'
+      } else if (blueLeft === 0) {
+        gameUpdate.status = 'finished'
+        gameUpdate.winner = 'blue'
+      } else if (card.type !== game.current_team) {
+        gameUpdate.current_team = opponent
+      }
+    }
+
+    if (Object.keys(gameUpdate).length > 0) {
+      setGame((prev) => ({ ...prev, ...gameUpdate }))
+    }
+
     startTransition(() => revealCard(cardId, game.id))
   }
 
