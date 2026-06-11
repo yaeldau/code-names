@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-heebo), system-ui, sans-serif;
+
+  --color-red-team: oklch(0.577 0.245 27.325);
+  --color-blue-team: oklch(0.546 0.245 262.881);
+  --color-neutral-card: oklch(0.769 0.063 80.47);
+  --color-assassin-card: oklch(0.21 0 0);
+}
+
+/* Ensure all interactive elements respect RTL */
+* {
+  box-sizing: border-box;
+}
