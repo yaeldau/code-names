@@ -4,16 +4,19 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { revealCard, endTurn } from '@/app/actions'
 import GameCard from './GameCard'
+import CluePanel from './CluePanel'
 import SharePanel from './SharePanel'
-import type { Card, Game, Team } from '@/types/game'
+import type { Card, Clue, Game, Team } from '@/types/game'
 
 interface GameBoardProps {
   initialGame: Game
   initialCards: Card[]
+  initialClue: Clue | null
   isSpymaster: boolean
 }
 
 const TEAM_LABEL: Record<string, string> = { red: 'אדום', blue: 'כחול' }
+const STATUS_ORDER: Record<string, number> = { waiting: 0, active: 1, finished: 2 }
 
 function deriveGameUpdates(game: Game, card: Card): Partial<Game> {
   const opponent: Team = game.current_team === 'red' ? 'blue' : 'red'
@@ -43,19 +46,33 @@ function deriveGameUpdates(game: Game, card: Card): Partial<Game> {
   return updates
 }
 
-export default function GameBoard({ initialGame, initialCards, isSpymaster }: GameBoardProps) {
+export default function GameBoard({ initialGame, initialCards, initialClue, isSpymaster }: GameBoardProps) {
   const [game, setGame] = useState<Game>(initialGame)
   const [cards, setCards] = useState<Card[]>(initialCards)
+  const [activeClue, setActiveClue] = useState<Clue | null>(initialClue)
   const [, startTransition] = useTransition()
   const supabase = useMemo(() => createClient(), [])
 
-  // Keep a ref to latest state so realtime handlers avoid stale closures
+  // Refs to avoid stale closures in realtime handlers
   const stateRef = useRef({ game, cards })
   useEffect(() => { stateRef.current = { game, cards } }, [game, cards])
 
-  // Track the highest game version we've applied so stale realtime events
-  // (from earlier clicks that arrive late) are silently dropped.
+  // Highest game version we've actually applied — drops out-of-order events
   const appliedVersion = useRef(initialGame.version)
+
+  // Counts card clicks that are in-flight (optimistic but not yet server-confirmed).
+  // While pending > 0, we skip intermediate realtime game events and only apply
+  // the final one. This prevents the turn indicator from hopping during rapid clicks.
+  const pendingClicks = useRef(0)
+
+  // Clear the active clue whenever the turn changes
+  const prevTeam = useRef(initialGame.current_team)
+  useEffect(() => {
+    if (prevTeam.current !== game.current_team) {
+      prevTeam.current = game.current_team
+      setActiveClue(null)
+    }
+  }, [game.current_team])
 
   useEffect(() => {
     const channel = supabase
@@ -72,9 +89,9 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
             prev.map((c) => (c.id === newCard.id ? { ...c, ...newCard } : c))
           )
 
-          // Derive game state from the card event for other players (non-clickers).
-          // Skip if we already applied this optimistically (wasAlreadyRevealed = true).
-          // Skip if game is already finished — no further state changes allowed.
+          // For other players (non-clicker): derive game state from the card event
+          // so their board updates atomically with the card flip.
+          // Skip if we applied this optimistically already, or if game is over.
           if (newCard.revealed && !wasAlreadyRevealed && g.status !== 'finished') {
             const updates = deriveGameUpdates(g, newCard)
             if (Object.keys(updates).length > 0) {
@@ -90,20 +107,31 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
           const newGame = payload.new as Game
           const { game: g } = stateRef.current
 
-          // Game status only moves forward: waiting → active → finished.
-          // Once we've applied a game-over state optimistically, stale realtime
-          // events from earlier clicks (which still say status=active) must not
-          // overwrite it — even though their version numbers are all higher than
-          // appliedVersion.current (because rapid clicks fire before any realtime
-          // event arrives, so appliedVersion never advanced).
-          const STATUS_ORDER: Record<string, number> = { waiting: 0, active: 1, finished: 2 }
+          // Never revert game status backward (finished → active would undo a game-over
+          // that we applied optimistically before stale queued events arrived).
           if ((STATUS_ORDER[newGame.status] ?? 0) < (STATUS_ORDER[g.status] ?? 0)) return
 
-          // Secondary guard: drop genuinely out-of-order events.
+          // Drop duplicate or out-of-order events.
           if (newGame.version <= appliedVersion.current) return
-
           appliedVersion.current = newGame.version
+
+          // Skip intermediate events while we still have in-flight clicks.
+          // This prevents the turn indicator from hopping through intermediate states
+          // when several cards are clicked rapidly before any realtime event arrives.
+          if (pendingClicks.current > 0) {
+            pendingClicks.current -= 1
+            if (pendingClicks.current > 0) return
+            // pendingClicks just reached 0 — this is the last expected event; fall through.
+          }
+
           setGame((prev) => ({ ...prev, ...newGame }))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'clues', filter: `game_id=eq.${game.id}` },
+        (payload) => {
+          setActiveClue(payload.new as Clue)
         }
       )
       .subscribe()
@@ -115,6 +143,9 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
     if (game.status !== 'active') return
     const card = cards.find((c) => c.id === cardId)
     if (!card || card.revealed) return
+
+    // Count this click so the realtime handler knows to skip intermediate events
+    pendingClicks.current += 1
 
     // Optimistic: flip card and update game state instantly
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, revealed: true } : c)))
@@ -158,6 +189,9 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
 
         <span className="text-3xl font-bold text-blue-600">{game.blue_remaining}</span>
       </div>
+
+      {/* Clue panel */}
+      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
 
       {/* Board */}
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">

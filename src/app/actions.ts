@@ -109,6 +109,30 @@ export async function revealCard(cardId: string, gameId: string): Promise<void> 
   await supabase.from('games').update(updates).eq('id', gameId)
 }
 
+export async function addClue(gameId: string, formData: FormData): Promise<void> {
+  const word = (formData.get('word') as string | null)?.trim()
+  const countRaw = formData.get('count') as string | null
+  const count = parseInt(countRaw ?? '1')
+
+  if (!word) return
+
+  const supabase = await createClient()
+  const { data: game } = await supabase
+    .from('games')
+    .select('current_team, status')
+    .eq('id', gameId)
+    .single()
+
+  if (!game || game.status !== 'active') return
+
+  await supabase.from('clues').insert({
+    game_id: gameId,
+    team: game.current_team,
+    word,
+    count: isNaN(count) ? 1 : count,
+  })
+}
+
 export async function endTurn(gameId: string): Promise<void> {
   const supabase = await createClient()
 
