@@ -53,6 +53,10 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
   const stateRef = useRef({ game, cards })
   useEffect(() => { stateRef.current = { game, cards } }, [game, cards])
 
+  // Track the highest game version we've applied so stale realtime events
+  // (from earlier clicks that arrive late) are silently dropped.
+  const appliedVersion = useRef(initialGame.version)
+
   useEffect(() => {
     const channel = supabase
       .channel(`game:${game.id}`)
@@ -68,10 +72,10 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
             prev.map((c) => (c.id === newCard.id ? { ...c, ...newCard } : c))
           )
 
-          // Derive game state from the card event directly so turn/score update
-          // in the same render as the card flip — no hop, no delay for any player.
+          // Derive game state from the card event for other players (non-clickers).
           // Skip if we already applied this optimistically (wasAlreadyRevealed = true).
-          if (newCard.revealed && !wasAlreadyRevealed) {
+          // Skip if game is already finished — no further state changes allowed.
+          if (newCard.revealed && !wasAlreadyRevealed && g.status !== 'finished') {
             const updates = deriveGameUpdates(g, newCard)
             if (Object.keys(updates).length > 0) {
               setGame((prev) => ({ ...prev, ...updates }))
@@ -84,17 +88,12 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
         { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${game.id}` },
         (payload) => {
           const newGame = payload.new as Game
-          const { game: g } = stateRef.current
-          // Only apply games realtime for end_turn (current_team changed but no card
-          // was revealed) or as a safety sync for anything we might have missed.
-          // Ignore if our local state already shows the incoming values.
-          if (
-            newGame.current_team !== g.current_team ||
-            newGame.status !== g.status ||
-            newGame.winner !== g.winner
-          ) {
-            setGame((prev) => ({ ...prev, ...newGame }))
-          }
+          // Drop stale events — version must be strictly newer than what we last applied.
+          // This prevents queued-up realtime events from earlier clicks from overwriting
+          // the game-over state after the assassin is revealed.
+          if (newGame.version <= appliedVersion.current) return
+          appliedVersion.current = newGame.version
+          setGame((prev) => ({ ...prev, ...newGame }))
         }
       )
       .subscribe()
