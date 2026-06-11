@@ -172,26 +172,30 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
         <span className="text-3xl font-bold text-red-600">{game.red_remaining}</span>
 
         <div className="text-center">
-          {isFinished ? (
-            <p className="font-bold text-base text-gray-900">
-              {game.winner === 'red' ? '🔴' : '🔵'}{' '}
-              קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
-            </p>
-          ) : (
-            <>
-              <p className="text-xs text-gray-400 mb-0.5">תור</p>
-              <p className={`font-bold text-sm ${game.current_team === 'red' ? 'text-red-600' : 'text-blue-600'}`}>
-                {TEAM_LABEL[game.current_team]}
-              </p>
-            </>
-          )}
+          <p className="text-xs text-gray-400 mb-0.5">תור</p>
+          <p className={`font-bold text-sm ${game.current_team === 'red' ? 'text-red-600' : 'text-blue-600'}`}>
+            {TEAM_LABEL[game.current_team]}
+          </p>
         </div>
 
         <span className="text-3xl font-bold text-blue-600">{game.blue_remaining}</span>
       </div>
 
-      {/* Clue panel */}
-      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
+      {/* Winner banner / Clue panel */}
+      {isFinished ? (
+        <div className={`rounded-xl border-2 px-5 py-5 text-center ${
+          game.winner === 'red'
+            ? 'bg-red-50 border-red-300'
+            : 'bg-blue-50 border-blue-300'
+        }`}>
+          <p className="text-4xl mb-2">{game.winner === 'red' ? '🔴' : '🔵'}</p>
+          <p className={`text-2xl font-bold ${game.winner === 'red' ? 'text-red-700' : 'text-blue-700'}`}>
+            קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
+          </p>
+        </div>
+      ) : (
+        <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
+      )}
 
       {/* Board */}
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">

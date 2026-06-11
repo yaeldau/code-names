@@ -9,7 +9,7 @@ interface GameCardProps {
   onReveal: (id: string) => void
 }
 
-function cardClassName(card: Card, isSpymaster: boolean): string {
+function cardClassName(card: Card, isSpymaster: boolean, gameStatus: GameStatus): string {
   if (card.revealed) {
     const styles: Record<string, string> = {
       red: 'bg-red-600 text-white border-red-700',
@@ -18,6 +18,18 @@ function cardClassName(card: Card, isSpymaster: boolean): string {
       assassin: 'bg-gray-900 text-gray-100 border-gray-800',
     }
     return styles[card.type] + ' opacity-80'
+  }
+
+  // Game over: reveal the full board in soft pastels so players can see what they missed.
+  // These are visibly dimmer than the clicked (revealed) cards.
+  if (gameStatus === 'finished') {
+    const styles: Record<string, string> = {
+      red: 'bg-red-200 text-red-800 border-red-300',
+      blue: 'bg-blue-200 text-blue-800 border-blue-300',
+      neutral: 'bg-amber-100 text-amber-700 border-amber-200',
+      assassin: 'bg-gray-400 text-gray-900 border-gray-500',
+    }
+    return styles[card.type]
   }
 
   if (isSpymaster) {
@@ -43,8 +55,8 @@ export default function GameCard({ card, isSpymaster, gameStatus, onReveal }: Ga
       className={[
         'aspect-[3/2] rounded-lg border-2 flex items-center justify-center',
         'text-xs sm:text-sm font-medium text-center leading-tight px-1',
-        'transition-all duration-150 select-none',
-        cardClassName(card, isSpymaster),
+        'transition-all duration-300 select-none',
+        cardClassName(card, isSpymaster, gameStatus),
         !clickable ? 'cursor-default' : '',
       ].join(' ')}
     >
