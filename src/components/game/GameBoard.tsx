@@ -110,15 +110,6 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
         </button>
       )}
 
-      {isFinished && (
-        <a
-          href="/"
-          className="block text-center w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
-        >
-          משחק חדש
-        </a>
-      )}
-
       <SharePanel game={game} />
     </div>
   )
