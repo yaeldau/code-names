@@ -51,6 +51,7 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
   const [cards, setCards] = useState<Card[]>(initialCards)
   const [activeClue, setActiveClue] = useState<Clue | null>(initialClue)
   const [, startTransition] = useTransition()
+  const [endTurnPending, startEndTurnTransition] = useTransition()
   const supabase = useMemo(() => createClient(), [])
 
   // Refs to avoid stale closures in realtime handlers
@@ -158,8 +159,8 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
   }
 
   function handleEndTurn() {
-    if (game.status !== 'active') return
-    startTransition(() => endTurn(game.id))
+    if (game.status !== 'active' || endTurnPending) return
+    startEndTurnTransition(() => endTurn(game.id))
   }
 
   const sorted = [...cards].sort((a, b) => a.position - b.position)
@@ -214,9 +215,15 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
       {!isFinished && !isSpymaster && (
         <button
           onClick={handleEndTurn}
-          className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          disabled={endTurnPending}
+          className={[
+            'w-full rounded-xl py-3 text-sm font-semibold transition-colors',
+            endTurnPending
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gray-900 text-white hover:bg-gray-700 active:bg-gray-800',
+          ].join(' ')}
         >
-          סיים תור
+          {endTurnPending ? 'מעביר תור...' : 'סיים תור'}
         </button>
       )}
 
