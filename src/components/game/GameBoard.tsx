@@ -88,10 +88,20 @@ export default function GameBoard({ initialGame, initialCards, isSpymaster }: Ga
         { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${game.id}` },
         (payload) => {
           const newGame = payload.new as Game
-          // Drop stale events — version must be strictly newer than what we last applied.
-          // This prevents queued-up realtime events from earlier clicks from overwriting
-          // the game-over state after the assassin is revealed.
+          const { game: g } = stateRef.current
+
+          // Game status only moves forward: waiting → active → finished.
+          // Once we've applied a game-over state optimistically, stale realtime
+          // events from earlier clicks (which still say status=active) must not
+          // overwrite it — even though their version numbers are all higher than
+          // appliedVersion.current (because rapid clicks fire before any realtime
+          // event arrives, so appliedVersion never advanced).
+          const STATUS_ORDER: Record<string, number> = { waiting: 0, active: 1, finished: 2 }
+          if ((STATUS_ORDER[newGame.status] ?? 0) < (STATUS_ORDER[g.status] ?? 0)) return
+
+          // Secondary guard: drop genuinely out-of-order events.
           if (newGame.version <= appliedVersion.current) return
+
           appliedVersion.current = newGame.version
           setGame((prev) => ({ ...prev, ...newGame }))
         }
