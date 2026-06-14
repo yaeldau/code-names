@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import GameBoard from '@/components/game/GameBoard'
-import { createGame } from '@/app/actions'
-import SubmitButton from '@/components/ui/SubmitButton'
+import CreateGameButton from '@/components/ui/CreateGameButton'
 
 interface GamePageProps {
   params: Promise<{ code: string }>
@@ -52,13 +51,10 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     <main className="min-h-screen p-3 sm:p-4">
       <div className="max-w-xl mx-auto flex flex-col gap-3">
         <header className="flex items-center justify-between">
-          <form action={createGame}>
-            <SubmitButton
-              label="משחק חדש"
-              pendingLabel="יוצר..."
-              className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
-            />
-          </form>
+          <CreateGameButton
+            label="משחק חדש"
+            className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          />
 
           <div className="flex items-center gap-2">
             {isSpymaster && (

@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { revealCard, endTurn } from '@/app/actions'
 import GameCard from './GameCard'
 import CluePanel from './CluePanel'
 import SharePanel from './SharePanel'
@@ -54,8 +53,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
     [...initialClues].reverse().find((c) => c.team === initialGame.current_team) ?? null
   )
   const [hasGuessedThisTurn, setHasGuessedThisTurn] = useState(false)
-  const [, startTransition] = useTransition()
-  const [endTurnPending, startEndTurnTransition] = useTransition()
+  const [endTurnPending, setEndTurnPending] = useState(false)
   const supabase = useMemo(() => createClient(), [])
 
   // Refs to avoid stale closures in realtime handlers
@@ -164,14 +162,16 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       setGame((prev) => ({ ...prev, ...updates }))
     }
 
-    startTransition(() => revealCard(cardId, game.id))
+    supabase.rpc('reveal_card', { p_card_id: cardId, p_game_id: game.id })
   }
 
-  function handleEndTurn() {
+  async function handleEndTurn() {
     if (game.status !== 'active' || endTurnPending) return
     const nextTeam: Team = game.current_team === 'red' ? 'blue' : 'red'
     setGame((prev) => ({ ...prev, current_team: nextTeam }))
-    startEndTurnTransition(() => endTurn(game.id))
+    setEndTurnPending(true)
+    await supabase.rpc('end_turn', { p_game_id: game.id })
+    setEndTurnPending(false)
   }
 
   const sorted = [...cards].sort((a, b) => a.position - b.position)

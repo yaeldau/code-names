@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useTransition } from 'react'
-import { addClue } from '@/app/actions'
+import { useMemo, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { Clue, Game } from '@/types/game'
 
 const TEAM_COLOR: Record<string, string> = {
@@ -17,15 +17,23 @@ interface CluePanelProps {
 
 export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelProps) {
   const formRef = useRef<HTMLFormElement>(null)
-  const [, startTransition] = useTransition()
+  const supabase = useMemo(() => createClient(), [])
 
   if (game.status === 'finished') return null
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    const word = (formData.get('word') as string)?.trim()
+    const count = parseInt(formData.get('count') as string ?? '1')
+    if (!word) return
     formRef.current?.reset()
-    startTransition(() => addClue(game.id, formData))
+    await supabase.from('clues').insert({
+      game_id: game.id,
+      team: game.current_team,
+      word,
+      count: isNaN(count) ? 1 : count,
+    })
   }
 
   return (

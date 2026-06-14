@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { createGame } from './actions'
-import SubmitButton from '@/components/ui/SubmitButton'
+import CreateGameButton from '@/components/ui/CreateGameButton'
 
 export const metadata: Metadata = {
   title: 'שם קוד | משחק Codenames בעברית',
@@ -16,13 +15,10 @@ export default function HomePage() {
       </div>
 
       <div className="w-full max-w-xs flex flex-col gap-3">
-        <form action={createGame}>
-          <SubmitButton
-            label="צור משחק חדש"
-            pendingLabel="יוצר משחק..."
-            className="w-full rounded-2xl bg-gray-900 py-4 text-lg font-semibold text-white hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50 transition-colors"
-          />
-        </form>
+        <CreateGameButton
+          label="צור משחק חדש"
+          className="w-full rounded-2xl bg-gray-900 py-4 text-lg font-semibold text-white hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50 transition-colors"
+        />
 
         <Link
           href="/how-to-play"
