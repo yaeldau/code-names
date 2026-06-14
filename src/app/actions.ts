@@ -5,13 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 import words from '@/words/hebrew.json'
 import type { CardType, Team, GameStatus } from '@/types/game'
 
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 6 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join('')
-}
-
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -32,34 +25,14 @@ export async function createGame(): Promise<void> {
     'assassin',
   ])
 
-  // Find a unique code
-  let code = generateCode()
-  for (let i = 0; i < 5; i++) {
-    const { data } = await supabase.from('games').select('id').eq('code', code).maybeSingle()
-    if (!data) break
-    code = generateCode()
-  }
+  const { data, error } = await supabase.rpc('create_game', {
+    p_words: selectedWords,
+    p_types: types,
+  })
 
-  const { data: game, error } = await supabase
-    .from('games')
-    .insert({ code, status: 'active' as GameStatus })
-    .select()
-    .single()
+  if (error || !data?.code) throw new Error('Failed to create game')
 
-  if (error || !game) throw new Error('Failed to create game')
-
-  const { error: cardsError } = await supabase.from('cards').insert(
-    selectedWords.map((word, i) => ({
-      game_id: game.id,
-      word,
-      type: types[i],
-      position: i,
-    }))
-  )
-
-  if (cardsError) throw new Error('Failed to create cards')
-
-  redirect(`/game/${code}`)
+  redirect(`/game/${data.code}`)
 }
 
 export async function revealCard(cardId: string, gameId: string): Promise<void> {

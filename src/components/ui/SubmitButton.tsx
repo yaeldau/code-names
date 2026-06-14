@@ -14,9 +14,14 @@ export default function SubmitButton({ label, pendingLabel, className }: SubmitB
     <button
       type="submit"
       disabled={pending}
-      className={className}
+      className={`${className} relative`}
     >
-      {pending ? pendingLabel : label}
+      <span className={pending ? 'invisible' : ''}>{label}</span>
+      {pending && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        </span>
+      )}
     </button>
   )
 }

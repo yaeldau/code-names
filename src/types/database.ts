@@ -13,6 +13,7 @@ export type Database = {
           blue_remaining: number
           winner: Team | null
           spymaster_token: string
+          version: number
           created_at: string
         }
         Insert: {

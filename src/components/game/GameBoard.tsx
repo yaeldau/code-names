@@ -11,7 +11,7 @@ import type { Card, Clue, Game, Team } from '@/types/game'
 interface GameBoardProps {
   initialGame: Game
   initialCards: Card[]
-  initialClue: Clue | null
+  initialClues: Clue[]
   isSpymaster: boolean
 }
 
@@ -46,10 +46,14 @@ function deriveGameUpdates(game: Game, card: Card): Partial<Game> {
   return updates
 }
 
-export default function GameBoard({ initialGame, initialCards, initialClue, isSpymaster }: GameBoardProps) {
+export default function GameBoard({ initialGame, initialCards, initialClues, isSpymaster }: GameBoardProps) {
   const [game, setGame] = useState<Game>(initialGame)
   const [cards, setCards] = useState<Card[]>(initialCards)
-  const [activeClue, setActiveClue] = useState<Clue | null>(initialClue)
+  const [clues, setClues] = useState<Clue[]>(initialClues)
+  const [activeClue, setActiveClue] = useState<Clue | null>(
+    [...initialClues].reverse().find((c) => c.team === initialGame.current_team) ?? null
+  )
+  const [hasGuessedThisTurn, setHasGuessedThisTurn] = useState(false)
   const [, startTransition] = useTransition()
   const [endTurnPending, startEndTurnTransition] = useTransition()
   const supabase = useMemo(() => createClient(), [])
@@ -66,12 +70,13 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
   // the final one. This prevents the turn indicator from hopping during rapid clicks.
   const pendingClicks = useRef(0)
 
-  // Clear the active clue whenever the turn changes
+  // Clear the active clue and guess tracker whenever the turn changes
   const prevTeam = useRef(initialGame.current_team)
   useEffect(() => {
     if (prevTeam.current !== game.current_team) {
       prevTeam.current = game.current_team
       setActiveClue(null)
+      setHasGuessedThisTurn(false)
     }
   }, [game.current_team])
 
@@ -132,7 +137,9 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'clues', filter: `game_id=eq.${game.id}` },
         (payload) => {
-          setActiveClue(payload.new as Clue)
+          const newClue = payload.new as Clue
+          setActiveClue(newClue)
+          setClues((prev) => [...prev, newClue])
         }
       )
       .subscribe()
@@ -144,6 +151,8 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
     if (game.status !== 'active') return
     const card = cards.find((c) => c.id === cardId)
     if (!card || card.revealed) return
+
+    setHasGuessedThisTurn(true)
 
     // Count this click so the realtime handler knows to skip intermediate events
     pendingClicks.current += 1
@@ -160,6 +169,8 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
 
   function handleEndTurn() {
     if (game.status !== 'active' || endTurnPending) return
+    const nextTeam: Team = game.current_team === 'red' ? 'blue' : 'red'
+    setGame((prev) => ({ ...prev, current_team: nextTeam }))
     startEndTurnTransition(() => endTurn(game.id))
   }
 
@@ -215,16 +226,35 @@ export default function GameBoard({ initialGame, initialCards, initialClue, isSp
       {!isFinished && !isSpymaster && (
         <button
           onClick={handleEndTurn}
-          disabled={endTurnPending}
+          disabled={endTurnPending || !hasGuessedThisTurn}
           className={[
             'w-full rounded-xl py-3 text-sm font-semibold transition-colors',
-            endTurnPending
+            endTurnPending || !hasGuessedThisTurn
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 active:bg-gray-100',
           ].join(' ')}
         >
           {endTurnPending ? 'מעביר תור...' : 'סיים תור'}
         </button>
+      )}
+
+      {clues.length > 0 && (
+        <div className="flex gap-4 text-xs font-medium">
+          <div className="flex-1 flex flex-col gap-0.5 text-right">
+            {clues.filter((c) => c.team === 'red').map((clue) => (
+              <span key={clue.id} className="text-red-600">
+                {clue.word} {clue.count === 0 ? '∞' : clue.count}
+              </span>
+            ))}
+          </div>
+          <div className="flex-1 flex flex-col gap-0.5 text-left">
+            {clues.filter((c) => c.team === 'blue').map((clue) => (
+              <span key={clue.id} className="text-blue-600">
+                {clue.word} {clue.count === 0 ? '∞' : clue.count}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
 
       <SharePanel game={game} />

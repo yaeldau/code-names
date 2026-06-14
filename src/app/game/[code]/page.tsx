@@ -40,14 +40,11 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
 
   if (!cards?.length) notFound()
 
-  const { data: initialClue } = await supabase
+  const { data: initialClues } = await supabase
     .from('clues')
     .select('*')
     .eq('game_id', game.id)
-    .eq('team', game.current_team)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .order('created_at', { ascending: true })
 
   const isSpymaster = Boolean(token && token === game.spymaster_token)
 
@@ -78,7 +75,7 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
         <GameBoard
           initialGame={game}
           initialCards={cards}
-          initialClue={initialClue ?? null}
+          initialClues={initialClues ?? []}
           isSpymaster={isSpymaster}
         />
       </div>

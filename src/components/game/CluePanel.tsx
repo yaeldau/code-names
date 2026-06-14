@@ -46,9 +46,9 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
         )}
       </div>
 
-      {/* Spymaster input */}
+      {/* Spymaster input — always rendered to prevent layout jump; hidden after submit */}
       {isSpymaster && (
-        <form ref={formRef} onSubmit={handleSubmit} className="flex gap-2">
+        <form ref={formRef} onSubmit={handleSubmit} className={`flex gap-2 ${activeClue ? 'invisible' : ''}`}>
           <input
             name="word"
             placeholder="מילת רמז"
