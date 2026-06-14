@@ -4,7 +4,7 @@ import { useFormStatus } from 'react-dom'
 
 interface SubmitButtonProps {
   label: string
-  pendingLabel: string
+  pendingLabel?: string
   className?: string
 }
 

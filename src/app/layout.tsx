@@ -15,9 +15,11 @@ export const metadata: Metadata = {
   },
   description: 'משחק שם קוד בעברית — צרו משחק, שתפו קישור, ושחקו עם חברים בזמן אמת.',
   keywords: ['שם קוד', 'codenames', 'משחק מילים', 'משחק חברתי', 'עברית'],
+  metadataBase: new URL('https://codenames-il.vercel.app'),
   openGraph: {
     title: 'שם קוד | Codenames בעברית',
     description: 'משחק שם קוד בעברית — שחקו עם חברים בזמן אמת.',
+    url: 'https://codenames-il.vercel.app',
     locale: 'he_IL',
     type: 'website',
   },

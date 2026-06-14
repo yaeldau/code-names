@@ -2,7 +2,7 @@
 
 A free, real-time Hebrew version of the board game [Codenames](https://en.wikipedia.org/wiki/Codenames_(board_game)), playable in any browser with no account required.
 
-**[▶ Play now](https://code-names.vercel.app)** · Built with Next.js 15 + Supabase
+**[▶ Play now](https://codenames-il.vercel.app)** · Built with Next.js 15 + Supabase
 
 ---
 
