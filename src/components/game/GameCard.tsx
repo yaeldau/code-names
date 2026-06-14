@@ -11,6 +11,16 @@ interface GameCardProps {
 
 function cardClassName(card: Card, isSpymaster: boolean, gameStatus: GameStatus): string {
   if (card.revealed) {
+    if (isSpymaster) {
+      // Faded in spymaster view — card is "done", still shows team color but muted
+      const styles: Record<string, string> = {
+        red:      'bg-red-200  text-red-400  line-through',
+        blue:     'bg-blue-200 text-blue-400 line-through',
+        neutral:  'bg-gray-200 text-gray-400 line-through',
+        assassin: 'bg-gray-400 text-gray-600 line-through',
+      }
+      return styles[card.type]
+    }
     const styles: Record<string, string> = {
       red:      'bg-red-500  text-white',
       blue:     'bg-blue-500 text-white',
