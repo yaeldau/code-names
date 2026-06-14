@@ -162,7 +162,11 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       setGame((prev) => ({ ...prev, ...updates }))
     }
 
-    supabase.rpc('reveal_card', { p_card_id: cardId, p_game_id: game.id })
+    // Persist: plain UPDATE calls (same as old server action — no FOR UPDATE lock needed)
+    supabase.from('cards').update({ revealed: true }).eq('id', cardId)
+    if (Object.keys(updates).length > 0) {
+      supabase.from('games').update(updates).eq('id', game.id)
+    }
   }
 
   async function handleEndTurn() {
@@ -170,7 +174,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
     const nextTeam: Team = game.current_team === 'red' ? 'blue' : 'red'
     setGame((prev) => ({ ...prev, current_team: nextTeam }))
     setEndTurnPending(true)
-    await supabase.rpc('end_turn', { p_game_id: game.id })
+    await supabase.from('games').update({ current_team: nextTeam }).eq('id', game.id)
     setEndTurnPending(false)
   }
 
