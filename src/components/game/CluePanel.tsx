@@ -99,9 +99,7 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
               {activeClue.count === 0 ? '∞' : activeClue.count}
             </span>
           </>
-        ) : isSpymaster ? (
-          <p className="text-xs font-medium text-gray-400 tracking-wide">הזן רמז לקבוצה שלך</p>
-        ) : (
+        ) : !isSpymaster ? (
           <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
         )}
       </div>
