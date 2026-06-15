@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import BackButton from '@/components/ui/BackButton'
 
 export const metadata: Metadata = {
   title: 'איך משחקים שם קוד? הוראות משחק Codenames בעברית',
@@ -18,6 +19,7 @@ export default function HowToPlayPage() {
           <Link href="/" className="font-bold text-gray-900 hover:text-gray-600 transition-colors">
             שם קוד
           </Link>
+          <BackButton />
         </nav>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">איך משחקים שם קוד?</h1>

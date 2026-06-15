@@ -66,9 +66,15 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/how-to-play" className="text-gray-400 hover:text-gray-700 transition-colors text-sm">
+            <Link
+              href="/how-to-play"
+              className="transition-colors text-sm text-gray-400 hover:text-gray-700"
+              title="איך משחקים?"
+            >
               <span className="hidden sm:inline">איך משחקים?</span>
-              <span className="sm:hidden">?</span>
+              <span className="sm:hidden flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 text-gray-500 hover:border-gray-500 font-bold leading-none">
+                ?
+              </span>
             </Link>
             {isSpymaster && (
               <span className="rounded-full px-2.5 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
