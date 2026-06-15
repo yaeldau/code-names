@@ -34,7 +34,7 @@ export default function HomePage() {
       <main className="min-h-screen flex flex-col items-center justify-center p-6 gap-10">
         <div className="text-center">
           <h1 className="text-6xl font-bold text-gray-900 mb-3">שם קוד</h1>
-          <p className="text-lg text-gray-400">משחק Codenames בעברית — שחקו עם חברים בזמן אמת</p>
+          <p className="text-lg text-gray-500">משחק Codenames בעברית — שחקו עם חברים בזמן אמת</p>
         </div>
 
         <div className="w-full max-w-xs flex flex-col gap-3">
@@ -45,7 +45,7 @@ export default function HomePage() {
 
           <Link
             href="/how-to-play"
-            className="text-center text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2"
+            className="text-center text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
           >
             איך משחקים?
           </Link>
@@ -76,21 +76,21 @@ export default function HomePage() {
             <div className="flex flex-col gap-1">
               <span className="text-2xl">🔗</span>
               <span className="font-medium text-gray-700">שתפו קישור</span>
-              <span className="text-gray-400 text-xs">אין צורך בהתקנה</span>
+              <span className="text-gray-500 text-xs">אין צורך בהתקנה</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-2xl">⚡</span>
               <span className="font-medium text-gray-700">זמן אמת</span>
-              <span className="text-gray-400 text-xs">כל מהלך מתעדכן מיד</span>
+              <span className="text-gray-500 text-xs">כל מהלך מתעדכן מיד</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-2xl">🆓</span>
               <span className="font-medium text-gray-700">חינמי לגמרי</span>
-              <span className="text-gray-400 text-xs">ללא הרשמה</span>
+              <span className="text-gray-500 text-xs">ללא הרשמה</span>
             </div>
           </div>
 
-          <div className="text-sm text-gray-400 leading-relaxed border-t border-gray-100 pt-4">
+          <div className="text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
             <p>
               משחק שם קוד אונליין בעברית — Codenames — מתאים למסיבות, ערבי חברים, וימי גיבוש.
               שחקו ישירות מהדפדפן בלי להוריד שום דבר.{' '}
