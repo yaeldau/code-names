@@ -40,39 +40,23 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
     })
   }
 
+  const formHidden = activeClue !== null || game.status === 'finished'
+
   return (
-    <div className={`rounded-xl border-2 px-4 py-3 shadow-sm bg-white ${TEAM_BORDER[game.current_team]}`}>
+    <div className={`rounded-xl border-2 shadow-sm bg-white ${TEAM_BORDER[game.current_team]} relative px-4 py-3`}>
 
-      {/* Active clue — shown to everyone */}
-      {activeClue && (
-        <div className="min-h-8 flex items-center justify-center gap-2 leading-none">
-          <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
-            {activeClue.word}
-          </span>
-          <span className="text-gray-300 text-xl font-light select-none">·</span>
-          <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]} opacity-50`}>
-            {activeClue.count === 0 ? '∞' : activeClue.count}
-          </span>
-        </div>
-      )}
+      {/* Invisible skeleton — defines the card height without rendering anything */}
+      <div className="invisible select-none pointer-events-none" aria-hidden>
+        <div className="min-h-8" />
+        {isSpymaster && <div className="mt-2 h-[38px]" />}
+      </div>
 
-      {/* No active clue — different message per role */}
-      {!activeClue && (
-        <div className="min-h-8 flex items-center justify-center">
-          {isSpymaster ? (
-            <p className="text-xs font-medium text-gray-400 tracking-wide">הזן רמז לקבוצה שלך</p>
-          ) : (
-            <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
-          )}
-        </div>
-      )}
-
-      {/* Spymaster input — always rendered for layout stability; hidden when clue given or game over */}
+      {/* Spymaster form — anchored to the bottom of the card */}
       {isSpymaster && (
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className={`flex gap-2 mt-2 ${(activeClue || game.status === 'finished') ? 'invisible' : ''}`}
+          className={`absolute bottom-3 left-4 right-4 flex gap-2 ${formHidden ? 'invisible pointer-events-none' : ''}`}
         >
           <input
             name="word"
@@ -95,15 +79,32 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
           <button
             type="submit"
             className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
-              game.current_team === 'red'
-                ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-blue-600 hover:bg-blue-700'
+              game.current_team === 'red' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             שלח
           </button>
         </form>
       )}
+
+      {/* Content — absolutely centered over the entire card */}
+      <div className="absolute inset-0 flex items-center justify-center gap-2 leading-none">
+        {activeClue ? (
+          <>
+            <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
+              {activeClue.word}
+            </span>
+            <span className="text-gray-300 text-xl font-light select-none">·</span>
+            <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]} opacity-50`}>
+              {activeClue.count === 0 ? '∞' : activeClue.count}
+            </span>
+          </>
+        ) : isSpymaster ? (
+          <p className="text-xs font-medium text-gray-400 tracking-wide">הזן רמז לקבוצה שלך</p>
+        ) : (
+          <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
+        )}
+      </div>
     </div>
   )
 }
