@@ -22,8 +22,8 @@ const BOARD = [
 const CARD_BG: Record<string, string> = {
   red:   '#ef4444',
   blue:  '#3b82f6',
-  tan:   '#a8947a',
-  black: '#0f172a',
+  tan:   '#c4a882',
+  black: '#374151',
 }
 
 const CARD_BORDER: Record<string, string> = {
@@ -47,7 +47,7 @@ export default async function OgImage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: '#09111f',
+          background: '#f8fafc',
           fontFamily: 'Heebo, sans-serif',
           position: 'relative',
         }}
@@ -86,7 +86,7 @@ export default async function OgImage() {
                       borderRadius: 9,
                       background: CARD_BG[type],
                       border: `2px solid ${CARD_BORDER[type]}`,
-                      boxShadow: `0 4px 12px rgba(0,0,0,0.5)`,
+                      boxShadow: `0 2px 8px rgba(0,0,0,0.15)`,
                       display: 'flex',
                     }}
                   />
@@ -94,37 +94,13 @@ export default async function OgImage() {
               </div>
             ))}
 
-            {/* Colour legend */}
-            <div style={{
-              display: 'flex',
-              gap: 16,
-              marginTop: 18,
-              alignItems: 'center',
-            }}>
-              {[
-                { bg: '#ef4444', label: rtl('אדום') },
-                { bg: '#3b82f6', label: rtl('כחול') },
-                { bg: '#a8947a', label: rtl('ניטרלי') },
-                { bg: '#0f172a', border: '#334155', label: rtl('קוטל') },
-              ].map(({ bg, border, label }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{
-                    width: 12, height: 12, borderRadius: 3,
-                    background: bg,
-                    border: `1px solid ${border ?? bg}`,
-                    display: 'flex',
-                  }} />
-                  <span style={{ color: '#475569', fontSize: 16 }}>{label}</span>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Divider */}
           <div style={{
             width: 1,
             margin: '64px 0',
-            background: 'rgba(255,255,255,0.08)',
+            background: '#e2e8f0',
             display: 'flex',
           }} />
 
@@ -152,7 +128,7 @@ export default async function OgImage() {
               style={{
                 fontSize: 118,
                 fontWeight: 800,
-                color: '#f8fafc',
+                color: '#0f172a',
                 lineHeight: 1,
                 letterSpacing: '-2px',
               }}
@@ -162,7 +138,7 @@ export default async function OgImage() {
 
             {/* Subtitle */}
             <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
-              <div style={{ fontSize: 28, color: '#334155', letterSpacing: 5 }}>CODENAMES</div>
+              <div style={{ fontSize: 28, color: '#94a3b8', letterSpacing: 5 }}>CODENAMES</div>
               <div style={{ fontSize: 28, color: '#64748b' }}>{rtl('בעברית')}</div>
             </div>
 
@@ -172,8 +148,8 @@ export default async function OgImage() {
                 <div
                   key={tag}
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
                     borderRadius: 99,
                     paddingTop: 7, paddingBottom: 7,
                     paddingLeft: 18, paddingRight: 18,
@@ -188,7 +164,7 @@ export default async function OgImage() {
             </div>
 
             {/* Domain */}
-            <div style={{ fontSize: 19, color: '#1e3a5f', marginTop: 8, letterSpacing: 1 }}>
+            <div style={{ fontSize: 19, color: '#cbd5e1', marginTop: 8, letterSpacing: 1 }}>
               shemkod.com
             </div>
           </div>
