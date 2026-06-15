@@ -52,13 +52,13 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     <main className="min-h-screen p-3 sm:p-4">
       <div className="max-w-xl mx-auto flex flex-col gap-3">
         <header className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="font-bold text-gray-900 hover:text-gray-600 transition-colors">
+          <div className="flex items-center gap-2.5">
+            <Link href="/" className="font-bold text-navy hover:opacity-70 transition-opacity text-lg">
               שם קוד
             </Link>
             <CreateGameButton
               label="משחק חדש"
-              className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              className="rounded-xl bg-navy px-3 py-1.5 text-sm font-semibold text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
               currentGameId={game.id}
             />
           </div>
@@ -66,20 +66,18 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
           <div className="flex items-center gap-2">
             <Link
               href="/how-to-play"
-              className="transition-colors text-sm text-gray-400 hover:text-gray-700"
+              className="text-sm text-ink-faint hover:text-ink-soft transition-colors"
               title="איך משחקים?"
             >
               <span className="hidden sm:inline">איך משחקים?</span>
-              <span className="sm:hidden flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 text-gray-500 hover:border-gray-500 font-bold leading-none">
-                ?
-              </span>
+              <span className="sm:hidden">?</span>
             </Link>
             {isSpymaster && (
-              <span className="rounded-full px-2.5 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-navy text-white">
                 מרגל
               </span>
             )}
-            <span className="font-mono text-sm font-bold text-gray-400 tracking-widest">
+            <span className="font-mono text-xs font-bold text-ink-faint tracking-widest bg-surface border border-border rounded-lg px-2 py-1">
               {game.code}
             </span>
           </div>

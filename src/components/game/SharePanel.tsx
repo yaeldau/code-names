@@ -14,7 +14,7 @@ function CopyButton({ label, url, className }: { label: string; url: string; cla
 
   return (
     <button onClick={handleCopy} className={className}>
-      {copied ? `✓ הועתק` : `העתק ${label}`}
+      {copied ? `✓ הועתק` : label}
     </button>
   )
 }
@@ -27,12 +27,12 @@ export default function SharePanel({ game }: { game: Game }) {
       <CopyButton
         label="קישור שחקנים"
         url={`${origin}/game/${game.code}`}
-        className="flex-1 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+        className="flex-1 rounded-xl border border-border bg-surface py-3 text-sm font-medium text-ink-soft hover:bg-bg transition-colors"
       />
       <CopyButton
         label="קישור מרגלים"
         url={`${origin}/game/${game.code}?spymaster=${game.spymaster_token}`}
-        className="flex-1 rounded-xl border border-purple-200 bg-purple-50 py-3 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-colors"
+        className="flex-1 rounded-xl bg-navy py-3 text-sm font-semibold text-white hover:opacity-85 transition-opacity"
       />
     </div>
   )

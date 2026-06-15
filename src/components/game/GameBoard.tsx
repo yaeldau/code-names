@@ -209,24 +209,31 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Score bar */}
-      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-3 shadow-sm">
-        <span className="text-3xl font-bold text-red-600">{game.red_remaining}</span>
+
+      {/* ── Score bar ── */}
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-5 py-3.5 shadow-sm">
+        <div className={`flex items-center gap-2.5 transition-opacity ${game.current_team !== 'red' ? 'opacity-35' : ''}`}>
+          <div className="w-2.5 h-2.5 rounded-full bg-game-red flex-shrink-0" />
+          <span className="text-3xl font-bold leading-none text-game-red">{game.red_remaining}</span>
+        </div>
 
         <div className="text-center">
-          <p className="text-xs text-gray-400 mb-0.5">תור</p>
-          <p className={`font-bold text-sm ${game.current_team === 'red' ? 'text-red-600' : 'text-blue-700'}`}>
+          <p className="text-[10px] uppercase tracking-widest text-ink-faint mb-1">תור</p>
+          <p className={`text-sm font-bold ${game.current_team === 'red' ? 'text-game-red' : 'text-game-blue'}`}>
             {TEAM_LABEL[game.current_team]}
           </p>
         </div>
 
-        <span className="text-3xl font-bold text-blue-700">{game.blue_remaining}</span>
+        <div className={`flex items-center gap-2.5 transition-opacity ${game.current_team !== 'blue' ? 'opacity-35' : ''}`}>
+          <span className="text-3xl font-bold leading-none text-game-blue">{game.blue_remaining}</span>
+          <div className="w-2.5 h-2.5 rounded-full bg-game-blue flex-shrink-0" />
+        </div>
       </div>
 
-      {/* Clue panel — always rendered so board position never changes */}
+      {/* ── Clue panel ── */}
       <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
 
-      {/* Board */}
+      {/* ── Board ── */}
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
         {sorted.map((card) => (
           <GameCard
@@ -239,12 +246,12 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         ))}
       </div>
 
-      {/* Winner banner (below board) / End turn */}
+      {/* ── Winner banner / End turn ── */}
       {isFinished ? (
-        <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+        <div className={`rounded-2xl border px-5 py-3.5 flex items-center justify-between ${
           game.winner === 'red'
-            ? 'bg-red-600 border-red-700'
-            : 'bg-blue-700 border-blue-800'
+            ? 'bg-game-red border-game-red-dark'
+            : 'bg-game-blue border-game-blue-dark'
         }`}>
           <p className="text-base font-bold text-white">
             קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
@@ -252,7 +259,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
           <button
             onClick={handleStartNewGame}
             disabled={newGamePending}
-            className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-1.5 text-sm font-semibold text-white transition-colors"
+            className="rounded-xl bg-white/20 hover:bg-white/30 border border-white/20 disabled:opacity-50 px-4 py-1.5 text-sm font-semibold text-white transition-colors"
           >
             {newGamePending ? 'יוצר משחק...' : 'משחק חדש'}
           </button>
@@ -262,50 +269,57 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
           onClick={handleEndTurn}
           disabled={endTurnPending || !hasGuessedThisTurn}
           className={[
-            'w-full rounded-xl py-3 text-sm font-semibold transition-colors',
+            'w-full rounded-2xl py-3 text-sm font-semibold transition-colors',
             endTurnPending || !hasGuessedThisTurn
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 active:bg-gray-100',
+              ? 'bg-border/50 text-ink-faint cursor-not-allowed'
+              : 'border border-border bg-surface text-ink-soft hover:bg-bg',
           ].join(' ')}
         >
           {endTurnPending ? 'מעביר תור...' : 'סיים תור'}
         </button>
       )}
 
+      {/* ── Clue history ── */}
       {clues.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 text-center mb-2 tracking-wide">היסטוריית רמזים</p>
+        <div className="rounded-2xl border border-border bg-surface px-4 py-3.5 shadow-sm">
+          <p className="text-[10px] font-semibold text-ink-faint text-center mb-3 tracking-widest uppercase">
+            היסטוריית רמזים
+          </p>
           <div className="flex gap-3">
             {/* Red clues */}
             <div className="flex-1 flex flex-col gap-1.5">
-              <div className="flex items-center justify-end gap-1.5 mb-0.5">
-                <span className="text-xs font-bold text-red-600">אדום</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+              <div className="flex items-center justify-end gap-1.5 mb-1">
+                <span className="text-xs font-bold text-game-red">אדום</span>
+                <div className="w-2 h-2 rounded-full bg-game-red flex-shrink-0" />
               </div>
               {clues.filter((c) => c.team === 'red').map((clue) => (
                 <div key={clue.id} className="flex items-baseline justify-end gap-1.5">
-                  <span className={clue.count === 0 ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}>{clue.count === 0 ? '∞' : clue.count}</span>
-                  <span className="text-xs font-semibold text-red-700 bg-red-50 rounded-md px-2 py-0.5">
+                  <span className={clue.count === 0 ? 'text-sm text-ink-faint' : 'text-xs text-ink-faint'}>
+                    {clue.count === 0 ? '∞' : clue.count}
+                  </span>
+                  <span className="text-xs font-semibold text-game-red bg-game-red-tint rounded-lg px-2 py-0.5">
                     {clue.word}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="w-px bg-gray-100" />
+            <div className="w-px bg-border" />
 
             {/* Blue clues */}
             <div className="flex-1 flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
-                <span className="text-xs font-bold text-blue-700">כחול</span>
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="w-2 h-2 rounded-full bg-game-blue flex-shrink-0" />
+                <span className="text-xs font-bold text-game-blue">כחול</span>
               </div>
               {clues.filter((c) => c.team === 'blue').map((clue) => (
                 <div key={clue.id} className="flex items-baseline gap-1.5">
-                  <span className="text-xs font-semibold text-blue-800 bg-blue-50 rounded-md px-2 py-0.5">
+                  <span className="text-xs font-semibold text-game-blue bg-game-blue-tint rounded-lg px-2 py-0.5">
                     {clue.word}
                   </span>
-                  <span className={clue.count === 0 ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}>{clue.count === 0 ? '∞' : clue.count}</span>
+                  <span className={clue.count === 0 ? 'text-sm text-ink-faint' : 'text-xs text-ink-faint'}>
+                    {clue.count === 0 ? '∞' : clue.count}
+                  </span>
                 </div>
               ))}
             </div>

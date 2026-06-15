@@ -3,13 +3,25 @@
 @theme {
   --font-sans: var(--font-heebo), system-ui, sans-serif;
 
-  --color-red-team: oklch(0.577 0.245 27.325);
-  --color-blue-team: oklch(0.546 0.245 262.881);
-  --color-neutral-card: oklch(0.769 0.063 80.47);
-  --color-assassin-card: oklch(0.21 0 0);
+  /* ── Neutral surfaces ── */
+  --color-bg:         #F7F8FA;
+  --color-surface:    #FFFFFF;
+  --color-border:     #E5E7EB;
+  --color-ink:        #111827;
+  --color-ink-soft:   #6B7280;
+  --color-ink-faint:  #9CA3AF;
+  --color-navy:       #0F172A;
+
+  /* ── Game colors ── */
+  --color-game-red:       #E5484D;
+  --color-game-red-dark:  #C93B40;
+  --color-game-red-tint:  #FFE8E8;
+  --color-game-blue:      #315BDE;
+  --color-game-blue-dark: #274BC1;
+  --color-game-blue-tint: #E8EEFF;
+  --color-neutral-card:   #EDE7DA;
+  --color-revealed:       #D6D3D1;
+  --color-assassin:       #2B3445;
 }
 
-/* Ensure all interactive elements respect RTL */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }

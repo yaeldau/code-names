@@ -9,47 +9,47 @@ interface GameCardProps {
   onReveal: (id: string) => void
 }
 
-function cardClassName(card: Card, isSpymaster: boolean, gameStatus: GameStatus): string {
+function cardVariant(card: Card, isSpymaster: boolean, gameStatus: GameStatus): string {
+  // ── Revealed ──────────────────────────────────────────────────────────────
   if (card.revealed) {
     if (isSpymaster) {
-      const styles: Record<string, string> = {
-        red:      'bg-red-100   text-red-300   line-through',
-        blue:     'bg-blue-100  text-blue-300  line-through',
-        neutral:  'bg-stone-100 text-stone-400 line-through',
-        assassin: 'bg-neutral-300 text-neutral-500 line-through',
-      }
-      return styles[card.type]
+      return {
+        red:      'bg-game-red/10      text-game-red/40      border-game-red/15      line-through',
+        blue:     'bg-game-blue/10     text-game-blue/40     border-game-blue/15     line-through',
+        neutral:  'bg-neutral-card/30  text-ink-faint/50     border-border/60        line-through',
+        assassin: 'bg-assassin/10      text-ink-faint/40     border-assassin/15      line-through',
+      }[card.type]
     }
-    const styles: Record<string, string> = {
-      red:      'bg-red-600    text-white',
-      blue:     'bg-blue-700   text-white',
-      neutral:  'bg-stone-400  text-white',
-      assassin: 'bg-neutral-950 text-neutral-200',
-    }
-    return styles[card.type]
+    return {
+      red:      'bg-game-red      border-game-red-dark  text-white',
+      blue:     'bg-game-blue     border-game-blue-dark text-white',
+      neutral:  'bg-revealed      border-revealed       text-ink-soft',
+      assassin: 'bg-assassin      border-assassin       text-white',
+    }[card.type]
   }
 
+  // ── Game finished — show all types ────────────────────────────────────────
   if (gameStatus === 'finished') {
-    const styles: Record<string, string> = {
-      red:      'bg-red-100   text-red-400',
-      blue:     'bg-blue-100  text-blue-400',
-      neutral:  'bg-stone-100 text-stone-300',
-      assassin: 'bg-neutral-600 text-white',
-    }
-    return styles[card.type]
+    return {
+      red:      'bg-game-red-tint  border-game-red/20   text-game-red',
+      blue:     'bg-game-blue-tint border-game-blue/20  text-game-blue',
+      neutral:  'bg-neutral-card/40 border-border        text-ink-faint',
+      assassin: 'bg-assassin/12    border-assassin/20   text-assassin',
+    }[card.type]
   }
 
+  // ── Spymaster unrevealed — sees colours ───────────────────────────────────
   if (isSpymaster) {
-    const styles: Record<string, string> = {
-      red:      'bg-red-400   text-white      font-semibold',
-      blue:     'bg-blue-500  text-white      font-semibold',
-      neutral:  'bg-stone-300 text-stone-700',
-      assassin: 'bg-neutral-900 text-neutral-100 font-semibold',
-    }
-    return styles[card.type]
+    return {
+      red:      'bg-game-red      border-game-red-dark  text-white font-bold',
+      blue:     'bg-game-blue     border-game-blue-dark text-white font-bold',
+      neutral:  'bg-neutral-card  border-neutral-card   text-ink-soft',
+      assassin: 'bg-assassin      border-assassin       text-white font-bold',
+    }[card.type]
   }
 
-  return 'bg-amber-50 text-stone-800 shadow-sm hover:bg-amber-100 hover:shadow-md active:scale-95 cursor-pointer'
+  // ── Player unrevealed — clean white card ──────────────────────────────────
+  return 'bg-surface border-border text-ink shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.97] cursor-pointer'
 }
 
 export default function GameCard({ card, isSpymaster, gameStatus, onReveal }: GameCardProps) {
@@ -60,10 +60,11 @@ export default function GameCard({ card, isSpymaster, gameStatus, onReveal }: Ga
       onClick={() => clickable && onReveal(card.id)}
       disabled={!clickable}
       className={[
-        'aspect-[3/2] rounded-lg border border-black/10 flex items-center justify-center',
-        'text-xs sm:text-sm font-medium text-center leading-tight px-1',
-        'transition-all duration-200 select-none',
-        cardClassName(card, isSpymaster, gameStatus),
+        'aspect-[3/2] rounded-xl border',
+        'flex items-center justify-center',
+        'text-xs sm:text-sm font-semibold text-center leading-tight px-1.5',
+        'transition-all duration-150 select-none',
+        cardVariant(card, isSpymaster, gameStatus),
         !clickable ? 'cursor-default' : '',
       ].join(' ')}
     >
