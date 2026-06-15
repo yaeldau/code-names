@@ -23,6 +23,20 @@ export async function createGame(): Promise<void> {
   redirect(`/game/${data.code}`)
 }
 
+/** Creates a new game and returns its code (used by the homepage button for pre-warming). */
+export async function createNewGame(): Promise<string> {
+  const supabase = await createClient()
+  const { selectedWords, types } = newGameWords()
+
+  const { data, error } = await supabase.rpc('create_game', {
+    p_words: selectedWords,
+    p_types: types,
+  })
+
+  if (error || !data?.code) throw new Error('Failed to create game')
+  return data.code as string
+}
+
 /** Creates a new game and returns its code + spymaster token for broadcasting. */
 export async function startNewGame(
   currentGameId: string

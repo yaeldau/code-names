@@ -2,24 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import words from '@/words/hebrew.json'
-import { sampleWords, buildCardTypes } from '@/lib/words'
+import { createNewGame } from '@/app/actions'
 
 interface CreateGameButtonProps {
   label: string
   className: string
   /** When set, delegates new game creation to GameBoard (which broadcasts to all clients). */
   currentGameId?: string
-}
-
-async function createGameCode(): Promise<string | null> {
-  const supabase = createClient()
-  const { data } = await supabase.rpc('create_game', {
-    p_words: sampleWords(words as string[]),
-    p_types: buildCardTypes(),
-  })
-  return data?.code ?? null
 }
 
 export default function CreateGameButton({ label, className, currentGameId }: CreateGameButtonProps) {
@@ -30,7 +19,7 @@ export default function CreateGameButton({ label, className, currentGameId }: Cr
 
   useEffect(() => {
     if (currentGameId) return
-    preCreated.current = createGameCode()
+    preCreated.current = createNewGame().catch(() => null)
   }, [currentGameId])
 
   async function handleClick() {
@@ -43,7 +32,7 @@ export default function CreateGameButton({ label, className, currentGameId }: Cr
       return
     }
 
-    const code = (await preCreated.current) ?? (await createGameCode())
+    const code = (await preCreated.current) ?? await createNewGame().catch(() => null)
     if (code) {
       router.push(`/game/${code}`)
     } else {
