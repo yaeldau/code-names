@@ -1,19 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import words from '@/words/hebrew.json'
-import type { CardType } from '@/types/game'
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
+import { sampleWords, buildCardTypes } from '@/lib/words'
 
 interface CreateGameButtonProps {
   label: string
@@ -22,9 +13,25 @@ interface CreateGameButtonProps {
   currentGameId?: string
 }
 
+async function createGameCode(): Promise<string | null> {
+  const supabase = createClient()
+  const { data } = await supabase.rpc('create_game', {
+    p_words: sampleWords(words as string[]),
+    p_types: buildCardTypes(),
+  })
+  return data?.code ?? null
+}
+
 export default function CreateGameButton({ label, className, currentGameId }: CreateGameButtonProps) {
   const [pending, setPending] = useState(false)
   const router = useRouter()
+  // Pre-warmed game promise — started on mount so the game is likely ready by click time
+  const preCreated = useRef<Promise<string | null> | null>(null)
+
+  useEffect(() => {
+    if (currentGameId) return
+    preCreated.current = createGameCode()
+  }, [currentGameId])
 
   async function handleClick() {
     if (pending) return
@@ -32,32 +39,16 @@ export default function CreateGameButton({ label, className, currentGameId }: Cr
 
     if (currentGameId) {
       // GameBoard owns the Supabase channel — delegate so it can broadcast to all clients.
-      // Page will navigate away; no need to reset pending.
       window.dispatchEvent(new CustomEvent('codenames:start-new-game'))
       return
     }
 
-    // Homepage / standalone: create a fresh game for this user only
-    const supabase = createClient()
-    const selectedWords = shuffle(words as string[]).slice(0, 25)
-    const types = shuffle<CardType>([
-      ...Array<CardType>(9).fill('red'),
-      ...Array<CardType>(8).fill('blue'),
-      ...Array<CardType>(7).fill('neutral'),
-      'assassin',
-    ])
-
-    const { data, error } = await supabase.rpc('create_game', {
-      p_words: selectedWords,
-      p_types: types,
-    })
-
-    if (error || !data?.code) {
-      setPending(false) // only reset on failure — on success the page navigates away
-      return
+    const code = (await preCreated.current) ?? (await createGameCode())
+    if (code) {
+      router.push(`/game/${code}`)
+    } else {
+      setPending(false)
     }
-    router.push(`/game/${data.code}`)
-    // Leave pending=true; spinner stays until the new page mounts and this component unmounts
   }
 
   return (
