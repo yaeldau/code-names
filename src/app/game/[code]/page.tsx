@@ -56,19 +56,22 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
             <Link href="/" className="font-bold text-gray-900 hover:text-gray-600 transition-colors">
               שם קוד
             </Link>
-            <CreateGameButton
-              label="משחק חדש"
-              className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
-              currentGameId={game.id}
-            />
+            <div className="hidden sm:block">
+              <CreateGameButton
+                label="משחק חדש"
+                className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                currentGameId={game.id}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link href="/how-to-play" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">
-              איך משחקים?
+          <div className="flex items-center gap-2">
+            <Link href="/how-to-play" className="text-gray-400 hover:text-gray-700 transition-colors text-sm">
+              <span className="hidden sm:inline">איך משחקים?</span>
+              <span className="sm:hidden">?</span>
             </Link>
             {isSpymaster && (
-              <span className="rounded-full px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
+              <span className="rounded-full px-2.5 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
                 מרגל
               </span>
             )}
