@@ -220,39 +220,41 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         <span className="text-3xl font-bold text-blue-700">{game.blue_remaining}</span>
       </div>
 
-      {/* Winner banner / Clue panel */}
-      {isFinished ? (
-        <div className={`rounded-xl border-2 px-5 py-5 text-center flex flex-col items-center gap-3 ${
-          game.winner === 'red'
-            ? 'bg-red-600 border-red-700'
-            : 'bg-blue-700 border-blue-800'
-        }`}>
-          <p className="text-2xl font-bold text-white">
-            קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
-          </p>
-          <button
-            onClick={handleStartNewGame}
-            disabled={newGamePending}
-            className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition-colors"
-          >
-            {newGamePending ? 'יוצר משחק...' : 'משחק חדש לכולם'}
-          </button>
-        </div>
-      ) : (
-        <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
-      )}
+      {/* Clue panel — always occupies same height so board never shifts */}
+      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
 
-      {/* Board */}
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-        {sorted.map((card) => (
-          <GameCard
-            key={card.id}
-            card={card}
-            isSpymaster={isSpymaster}
-            gameStatus={game.status}
-            onReveal={handleReveal}
-          />
-        ))}
+      {/* Board — winner banner overlays on top so position never changes */}
+      <div className="relative">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+          {sorted.map((card) => (
+            <GameCard
+              key={card.id}
+              card={card}
+              isSpymaster={isSpymaster}
+              gameStatus={game.status}
+              onReveal={handleReveal}
+            />
+          ))}
+        </div>
+
+        {isFinished && (
+          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl ${
+            game.winner === 'red'
+              ? 'bg-red-600/95'
+              : 'bg-blue-700/95'
+          }`}>
+            <p className="text-2xl font-bold text-white">
+              קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
+            </p>
+            <button
+              onClick={handleStartNewGame}
+              disabled={newGamePending}
+              className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition-colors"
+            >
+              {newGamePending ? 'יוצר משחק...' : 'משחק חדש לכולם'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* End turn */}

@@ -13,10 +13,10 @@ function cardClassName(card: Card, isSpymaster: boolean, gameStatus: GameStatus)
   if (card.revealed) {
     if (isSpymaster) {
       const styles: Record<string, string> = {
-        red:      'bg-red-300   text-red-500   line-through',
-        blue:     'bg-blue-300  text-blue-500  line-through',
-        neutral:  'bg-stone-300 text-stone-500 line-through',
-        assassin: 'bg-neutral-500 text-neutral-300 line-through',
+        red:      'bg-red-100   text-red-300   line-through',
+        blue:     'bg-blue-100  text-blue-300  line-through',
+        neutral:  'bg-stone-100 text-stone-400 line-through',
+        assassin: 'bg-neutral-300 text-neutral-500 line-through',
       }
       return styles[card.type]
     }
@@ -41,9 +41,9 @@ function cardClassName(card: Card, isSpymaster: boolean, gameStatus: GameStatus)
 
   if (isSpymaster) {
     const styles: Record<string, string> = {
-      red:      'bg-red-100   text-red-700   font-semibold ring-1 ring-red-300',
-      blue:     'bg-blue-100  text-blue-800  font-semibold ring-1 ring-blue-300',
-      neutral:  'bg-stone-100 text-stone-500',
+      red:      'bg-red-400   text-white      font-semibold',
+      blue:     'bg-blue-500  text-white      font-semibold',
+      neutral:  'bg-stone-300 text-stone-700',
       assassin: 'bg-neutral-900 text-neutral-100 font-semibold',
     }
     return styles[card.type]

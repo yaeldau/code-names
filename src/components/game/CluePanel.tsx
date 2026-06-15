@@ -19,7 +19,13 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
   const formRef = useRef<HTMLFormElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
-  if (game.status === 'finished') return null
+  if (game.status === 'finished') {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div className="min-h-8" />
+      </div>
+    )
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
