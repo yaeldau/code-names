@@ -56,7 +56,16 @@ export default function HomePage() {
           <div>
             <h2 className="text-lg font-semibold text-gray-700 mb-1">מה זה שם קוד?</h2>
             <p className="text-sm text-gray-500 leading-relaxed">
-              שם קוד הוא משחק קלפים חברתי פופולרי ל-4 עד 8 שחקנים.
+              שם קוד הוא{' '}
+              <a
+                href="https://he.wikipedia.org/wiki/%D7%A9%D7%9D_%D7%A7%D7%95%D7%93_(%D7%9E%D7%A9%D7%97%D7%A7_%D7%A7%D7%9C%D7%A4%D7%99%D7%9D)"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 underline underline-offset-2 hover:text-gray-900"
+              >
+                משחק קלפים חברתי
+              </a>{' '}
+              פופולרי ל-4 עד 8 שחקנים.
               שתי קבוצות מתחרות — כל קבוצה מנסה לגלות את כל הסוכנים שלה
               לפי רמזים חד-מילוליים שנותן המרגל שלה.
               גרסה מקוונת בעברית, ללא הרשמה וללא תשלום.
@@ -79,6 +88,17 @@ export default function HomePage() {
               <span className="font-medium text-gray-700">חינמי לגמרי</span>
               <span className="text-gray-400 text-xs">ללא הרשמה</span>
             </div>
+          </div>
+
+          <div className="text-sm text-gray-400 leading-relaxed border-t border-gray-100 pt-4">
+            <p>
+              משחק שם קוד אונליין בעברית — Codenames — מתאים למסיבות, ערבי חברים, וימי גיבוש.
+              שחקו ישירות מהדפדפן בלי להוריד שום דבר.{' '}
+              <Link href="/how-to-play" className="underline underline-offset-2 hover:text-gray-600">
+                קראו את הוראות המשחק
+              </Link>{' '}
+              אם אתם חדשים.
+            </p>
           </div>
         </section>
       </main>
