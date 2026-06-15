@@ -284,7 +284,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
               </div>
               {clues.filter((c) => c.team === 'red').map((clue) => (
                 <div key={clue.id} className="flex items-baseline justify-end gap-1.5">
-                  <span className="text-xs text-gray-500">{clue.count === 0 ? '∞' : clue.count}</span>
+                  <span className={clue.count === 0 ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}>{clue.count === 0 ? '∞' : clue.count}</span>
                   <span className="text-xs font-semibold text-red-700 bg-red-50 rounded-md px-2 py-0.5">
                     {clue.word}
                   </span>
@@ -305,7 +305,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
                   <span className="text-xs font-semibold text-blue-800 bg-blue-50 rounded-md px-2 py-0.5">
                     {clue.word}
                   </span>
-                  <span className="text-xs text-gray-500">{clue.count === 0 ? '∞' : clue.count}</span>
+                  <span className={clue.count === 0 ? 'text-sm text-gray-500' : 'text-xs text-gray-500'}>{clue.count === 0 ? '∞' : clue.count}</span>
                 </div>
               ))}
             </div>
