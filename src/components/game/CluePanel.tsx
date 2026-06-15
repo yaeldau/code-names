@@ -51,12 +51,12 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
         {isSpymaster && <div className="mt-2 h-[38px]" />}
       </div>
 
-      {/* Spymaster form — anchored to the bottom of the card */}
+      {/* Spymaster form — centered vertically in the card */}
       {isSpymaster && (
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className={`absolute bottom-3 left-4 right-4 flex gap-2 ${formHidden ? 'invisible pointer-events-none' : ''}`}
+          className={`absolute inset-0 flex items-center px-4 gap-2 ${formHidden ? 'invisible pointer-events-none' : ''}`}
         >
           <input
             name="word"
@@ -87,22 +87,24 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
         </form>
       )}
 
-      {/* Content — absolutely centered over the entire card */}
-      <div className="absolute inset-0 flex items-center justify-center gap-2 leading-none">
-        {activeClue ? (
-          <>
-            <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
-              {activeClue.word}
-            </span>
-            <span className="text-gray-300 text-xl font-light select-none">·</span>
-            <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]} opacity-50`}>
-              {activeClue.count === 0 ? '∞' : activeClue.count}
-            </span>
-          </>
-        ) : !isSpymaster ? (
-          <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
-        ) : null}
-      </div>
+      {/* Content — only rendered when there is something to show (avoids blocking the form) */}
+      {(activeClue || !isSpymaster) && (
+        <div className="absolute inset-0 flex items-center justify-center gap-2 leading-none pointer-events-none">
+          {activeClue ? (
+            <>
+              <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
+                {activeClue.word}
+              </span>
+              <span className="text-gray-300 text-xl font-light select-none">·</span>
+              <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]} opacity-50`}>
+                {activeClue.count === 0 ? '∞' : activeClue.count}
+              </span>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
