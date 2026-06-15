@@ -13,11 +13,12 @@ function cardVariant(card: Card, isSpymaster: boolean, gameStatus: GameStatus): 
   // ── Revealed ──────────────────────────────────────────────────────────────
   if (card.revealed) {
     if (isSpymaster) {
+      // Solid colour tile (like placing an agent card on top) — word hidden
       return {
-        red:      'bg-game-red/10      text-game-red/40      border-game-red/15      line-through',
-        blue:     'bg-game-blue/10     text-game-blue/40     border-game-blue/15     line-through',
-        neutral:  'bg-neutral-card/30  text-ink-faint/50     border-border/60        line-through',
-        assassin: 'bg-assassin/10      text-ink-faint/40     border-assassin/15      line-through',
+        red:      'bg-game-red/50  border-game-red/25  text-transparent',
+        blue:     'bg-game-blue/50 border-game-blue/25 text-transparent',
+        neutral:  'bg-stone-400/50 border-stone-400/25 text-transparent',
+        assassin: 'bg-assassin/50  border-assassin/25  text-transparent',
       }[card.type]
     }
     return {
