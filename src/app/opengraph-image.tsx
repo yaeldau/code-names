@@ -6,26 +6,31 @@ export const alt = 'שם קוד — Codenames בעברית'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-// Satori has no BiDi support — Hebrew must be manually put in visual (RTL) order.
-// Reversing the full string gives the correct visual glyph sequence for LTR rendering.
+// Satori has no BiDi support — reverse Hebrew strings for correct visual glyph order.
 function rtl(s: string) {
   return [...s].reverse().join('')
 }
 
-// Representative 5×5 game board
-const BOARD: ('red' | 'blue' | 'neu' | 'black')[][] = [
-  ['red',   'red',   'neu',   'blue',  'red'  ],
-  ['blue',  'neu',   'red',   'blue',  'red'  ],
-  ['red',   'blue',  'black', 'neu',   'blue' ],
-  ['blue',  'neu',   'red',   'red',   'blue' ],
-  ['neu',   'blue',  'red',   'neu',   'blue' ],
+// 5×4 board sample (realistic colour distribution)
+const BOARD = [
+  ['red',   'red',   'blue',  'tan',   'red'  ],
+  ['blue',  'tan',   'red',   'blue',  'blue' ],
+  ['tan',   'red',   'black', 'blue',  'tan'  ],
+  ['red',   'blue',  'tan',   'red',   'blue' ],
 ]
 
 const CARD_BG: Record<string, string> = {
+  red:   '#ef4444',
+  blue:  '#3b82f6',
+  tan:   '#a8947a',
+  black: '#0f172a',
+}
+
+const CARD_BORDER: Record<string, string> = {
   red:   '#b91c1c',
   blue:  '#1d4ed8',
-  neu:   '#57534e',
-  black: '#080706',
+  tan:   '#8a7660',
+  black: '#334155',
 }
 
 export default async function OgImage() {
@@ -41,114 +46,161 @@ export default async function OgImage() {
           width: '100%',
           height: '100%',
           display: 'flex',
-          background: '#0f172a',
+          flexDirection: 'column',
+          background: '#09111f',
           fontFamily: 'Heebo, sans-serif',
+          position: 'relative',
         }}
       >
-        {/* Left panel — decorative game board */}
-        <div
-          style={{
-            width: 400,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            paddingLeft: 52,
-          }}
-        >
-          {BOARD.map((row, r) => (
-            <div key={r} style={{ display: 'flex', gap: 8 }}>
-              {row.map((type, c) => (
-                <div
-                  key={c}
-                  style={{
-                    width: 60,
-                    height: 44,
-                    borderRadius: 7,
-                    background: CARD_BG[type],
-                    border: '1px solid rgba(255,255,255,0.07)',
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+        {/* Top gradient accent bar */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 5,
+          background: 'linear-gradient(90deg, #ef4444 0%, #a855f7 50%, #3b82f6 100%)',
+          display: 'flex',
+        }} />
 
-        {/* Divider */}
-        <div
-          style={{
-            width: 1,
-            margin: '60px 0',
-            background: 'rgba(255,255,255,0.1)',
-          }}
-        />
+        {/* Main content row */}
+        <div style={{ display: 'flex', flex: 1 }}>
 
-        {/* Right panel — title */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            paddingRight: 72,
-            paddingLeft: 40,
-            gap: 20,
-          }}
-        >
-          {/* Team colour accents */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ width: 56, height: 6, borderRadius: 3, background: '#dc2626' }} />
-            <div style={{ width: 56, height: 6, borderRadius: 3, background: '#2563eb' }} />
-          </div>
-
-          {/* Main title — pre-reversed for correct RTL visual rendering */}
+          {/* Left panel — decorative game board */}
           <div
             style={{
-              fontSize: 112,
-              fontWeight: 800,
-              color: '#ffffff',
-              lineHeight: 1,
-              letterSpacing: '-2px',
+              width: 430,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              paddingLeft: 56,
+              paddingRight: 20,
             }}
           >
-            {rtl('שם קוד')}
-          </div>
-
-          {/* Subtitle — Hebrew part reversed; Codenames stays LTR */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-            <div style={{ fontSize: 26, color: '#64748b' }}>Codenames</div>
-            <div style={{ fontSize: 30, color: '#94a3b8' }}>{rtl('בעברית אונליין')}</div>
-          </div>
-
-          {/* Feature pills — row-reverse keeps RTL reading order */}
-          <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: 10 }}>
-            {['חינמי', 'ללא הרשמה', 'זמן אמת'].map((tag) => (
-              <div
-                key={tag}
-                style={{
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 99,
-                  paddingTop: 8,
-                  paddingBottom: 8,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  fontSize: 20,
-                  color: '#64748b',
-                }}
-              >
-                {rtl(tag)}
+            {BOARD.map((row, r) => (
+              <div key={r} style={{ display: 'flex', gap: 10 }}>
+                {row.map((type, c) => (
+                  <div
+                    key={c}
+                    style={{
+                      width: 62,
+                      height: 46,
+                      borderRadius: 9,
+                      background: CARD_BG[type],
+                      border: `2px solid ${CARD_BORDER[type]}`,
+                      boxShadow: `0 4px 12px rgba(0,0,0,0.5)`,
+                      display: 'flex',
+                    }}
+                  />
+                ))}
               </div>
             ))}
+
+            {/* Colour legend */}
+            <div style={{
+              display: 'flex',
+              gap: 16,
+              marginTop: 18,
+              alignItems: 'center',
+            }}>
+              {[
+                { bg: '#ef4444', label: rtl('אדום') },
+                { bg: '#3b82f6', label: rtl('כחול') },
+                { bg: '#a8947a', label: rtl('ניטרלי') },
+                { bg: '#0f172a', border: '#334155', label: rtl('קוטל') },
+              ].map(({ bg, border, label }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{
+                    width: 12, height: 12, borderRadius: 3,
+                    background: bg,
+                    border: `1px solid ${border ?? bg}`,
+                    display: 'flex',
+                  }} />
+                  <span style={{ color: '#475569', fontSize: 16 }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Domain */}
-          <div style={{ fontSize: 20, color: '#334155', marginTop: 4 }}>
-            shemkod.com
+          {/* Divider */}
+          <div style={{
+            width: 1,
+            margin: '64px 0',
+            background: 'rgba(255,255,255,0.08)',
+            display: 'flex',
+          }} />
+
+          {/* Right panel — branding */}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              paddingRight: 72,
+              paddingLeft: 44,
+              gap: 18,
+            }}
+          >
+            {/* Red / blue accent stripes */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ width: 48, height: 5, borderRadius: 3, background: '#ef4444', display: 'flex' }} />
+              <div style={{ width: 48, height: 5, borderRadius: 3, background: '#3b82f6', display: 'flex' }} />
+            </div>
+
+            {/* Main Hebrew title */}
+            <div
+              style={{
+                fontSize: 118,
+                fontWeight: 800,
+                color: '#f8fafc',
+                lineHeight: 1,
+                letterSpacing: '-2px',
+              }}
+            >
+              {rtl('שם קוד')}
+            </div>
+
+            {/* Subtitle */}
+            <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
+              <div style={{ fontSize: 28, color: '#334155', letterSpacing: 5 }}>CODENAMES</div>
+              <div style={{ fontSize: 28, color: '#64748b' }}>{rtl('בעברית')}</div>
+            </div>
+
+            {/* Pills */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+              {[rtl('ללא הרשמה'), rtl('זמן אמת'), rtl('חינמי')].map((tag) => (
+                <div
+                  key={tag}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 99,
+                    paddingTop: 7, paddingBottom: 7,
+                    paddingLeft: 18, paddingRight: 18,
+                    fontSize: 20,
+                    color: '#64748b',
+                    display: 'flex',
+                  }}
+                >
+                  {tag}
+                </div>
+              ))}
+            </div>
+
+            {/* Domain */}
+            <div style={{ fontSize: 19, color: '#1e3a5f', marginTop: 8, letterSpacing: 1 }}>
+              shemkod.com
+            </div>
           </div>
+
         </div>
+
+        {/* Bottom gradient bar */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
+          background: 'linear-gradient(90deg, #3b82f6 0%, #a855f7 50%, #ef4444 100%)',
+          display: 'flex',
+        }} />
       </div>
     ),
     {
