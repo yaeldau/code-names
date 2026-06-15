@@ -101,7 +101,7 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
           </>
         ) : !isSpymaster ? (
           <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
-        )}
+        ) : null}
       </div>
     </div>
   )
