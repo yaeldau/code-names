@@ -81,6 +81,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         { event: 'UPDATE', schema: 'public', table: 'cards', filter: `game_id=eq.${game.id}` },
         (payload) => {
           const newCard = payload.new as Card
+          if (newCard.game_id !== game.id) return // guard against cross-game events
           const { game: g, cards: cs } = stateRef.current
           const wasAlreadyRevealed = cs.find((c) => c.id === newCard.id)?.revealed ?? false
 
@@ -101,6 +102,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${game.id}` },
         (payload) => {
           const newGame = payload.new as Game
+          if (newGame.id !== game.id) return // guard against cross-game events
           const { game: g } = stateRef.current
 
           if ((STATUS_ORDER[newGame.status] ?? 0) < (STATUS_ORDER[g.status] ?? 0)) return
@@ -120,6 +122,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         { event: 'INSERT', schema: 'public', table: 'clues', filter: `game_id=eq.${game.id}` },
         (payload) => {
           const newClue = payload.new as Clue
+          if (newClue.game_id !== game.id) return // guard against cross-game events
           setActiveClue(newClue)
           setClues((prev) => [...prev, newClue])
         }
