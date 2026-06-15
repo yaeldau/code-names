@@ -43,7 +43,7 @@ function cardVariant(card: Card, isSpymaster: boolean, gameStatus: GameStatus): 
     return {
       red:      'bg-game-red      border-game-red-dark  text-white font-bold',
       blue:     'bg-game-blue     border-game-blue-dark text-white font-bold',
-      neutral:  'bg-neutral-card  border-neutral-card   text-ink-soft',
+      neutral:  'bg-stone-500     border-stone-600      text-white',
       assassin: 'bg-assassin      border-assassin       text-white font-bold',
     }[card.type]
   }
