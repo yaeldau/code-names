@@ -6,6 +6,12 @@ export const alt = 'שם קוד — Codenames בעברית'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
+// Satori has no BiDi support — Hebrew must be manually put in visual (RTL) order.
+// Reversing the full string gives the correct visual glyph sequence for LTR rendering.
+function rtl(s: string) {
+  return [...s].reverse().join('')
+}
+
 // Representative 5×5 game board
 const BOARD: ('red' | 'blue' | 'neu' | 'black')[][] = [
   ['red',   'red',   'neu',   'blue',  'red'  ],
@@ -97,7 +103,7 @@ export default async function OgImage() {
             <div style={{ width: 56, height: 6, borderRadius: 3, background: '#2563eb' }} />
           </div>
 
-          {/* Main title */}
+          {/* Main title — pre-reversed for correct RTL visual rendering */}
           <div
             style={{
               fontSize: 112,
@@ -105,28 +111,19 @@ export default async function OgImage() {
               color: '#ffffff',
               lineHeight: 1,
               letterSpacing: '-2px',
-              direction: 'rtl',
-              textAlign: 'right',
             }}
           >
-            שם קוד
+            {rtl('שם קוד')}
           </div>
 
-          {/* Subtitle */}
-          <div
-            style={{
-              fontSize: 30,
-              color: '#94a3b8',
-              direction: 'rtl',
-              textAlign: 'right',
-              lineHeight: 1.4,
-            }}
-          >
-            Codenames בעברית אונליין
+          {/* Subtitle — Hebrew part reversed; Codenames stays LTR */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+            <div style={{ fontSize: 26, color: '#64748b' }}>Codenames</div>
+            <div style={{ fontSize: 30, color: '#94a3b8' }}>{rtl('בעברית אונליין')}</div>
           </div>
 
-          {/* Feature pills */}
-          <div style={{ display: 'flex', gap: 10, direction: 'rtl' }}>
+          {/* Feature pills — row-reverse keeps RTL reading order */}
+          <div style={{ display: 'flex', flexDirection: 'row-reverse', gap: 10 }}>
             {['חינמי', 'ללא הרשמה', 'זמן אמת'].map((tag) => (
               <div
                 key={tag}
@@ -142,7 +139,7 @@ export default async function OgImage() {
                   color: '#64748b',
                 }}
               >
-                {tag}
+                {rtl(tag)}
               </div>
             ))}
           </div>
