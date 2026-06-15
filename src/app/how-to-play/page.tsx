@@ -14,9 +14,11 @@ export default function HowToPlayPage() {
   return (
     <main className="min-h-screen p-6">
       <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-sm text-gray-500 underline underline-offset-2 mb-6 inline-block">
-          ← חזרה לדף הבית
-        </Link>
+        <nav className="flex items-center justify-between mb-6">
+          <Link href="/" className="font-bold text-gray-900 hover:text-gray-600 transition-colors">
+            שם קוד
+          </Link>
+        </nav>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">איך משחקים שם קוד?</h1>
         <p className="text-gray-500 mb-8">

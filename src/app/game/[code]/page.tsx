@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import GameBoard from '@/components/game/GameBoard'
 import CreateGameButton from '@/components/ui/CreateGameButton'
@@ -51,13 +52,21 @@ export default async function GamePage({ params, searchParams }: GamePageProps) 
     <main className="min-h-screen p-3 sm:p-4">
       <div className="max-w-xl mx-auto flex flex-col gap-3">
         <header className="flex items-center justify-between">
-          <CreateGameButton
-            label="משחק חדש"
-            className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
-            currentGameId={game.id}
-          />
-
           <div className="flex items-center gap-2">
+            <Link href="/" className="font-bold text-gray-900 hover:text-gray-600 transition-colors">
+              שם קוד
+            </Link>
+            <CreateGameButton
+              label="משחק חדש"
+              className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+              currentGameId={game.id}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/how-to-play" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">
+              איך משחקים?
+            </Link>
             {isSpymaster && (
               <span className="rounded-full px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-700">
                 מרגל
