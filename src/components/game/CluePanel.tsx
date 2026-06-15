@@ -45,11 +45,12 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
 
       {/* Active clue — shown to everyone */}
       {activeClue && (
-        <div className="min-h-8 flex items-center justify-center gap-3">
-          <span className={`text-2xl font-bold tracking-wide ${TEAM_COLOR[activeClue.team]}`}>
+        <div className="min-h-8 flex items-center justify-center gap-2 leading-none">
+          <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
             {activeClue.word}
           </span>
-          <span className={`text-lg font-semibold ${TEAM_COLOR[activeClue.team]} opacity-70`}>
+          <span className="text-gray-300 text-xl font-light select-none">·</span>
+          <span className={`text-2xl font-bold ${TEAM_COLOR[activeClue.team]} opacity-50`}>
             {activeClue.count === 0 ? '∞' : activeClue.count}
           </span>
         </div>
