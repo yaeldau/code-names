@@ -48,7 +48,7 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
       {/* Invisible skeleton — defines the card height without rendering anything */}
       <div className="invisible select-none pointer-events-none" aria-hidden>
         <div className="min-h-8" />
-        {isSpymaster && <div className="mt-2 h-[38px]" />}
+        <div className="mt-2 h-[38px]" />
       </div>
 
       {/* Spymaster form — centered vertically in the card */}
