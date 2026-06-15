@@ -9,6 +9,11 @@ const TEAM_COLOR: Record<string, string> = {
   blue: 'text-blue-600',
 }
 
+const TEAM_BORDER: Record<string, string> = {
+  red: 'border-red-200',
+  blue: 'border-blue-200',
+}
+
 interface CluePanelProps {
   game: Game
   isSpymaster: boolean
@@ -36,38 +41,50 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm space-y-2">
-      {/* Clue display — visible to everyone */}
-      <div className="min-h-8 flex items-center justify-center">
-        {activeClue ? (
-          <div className="flex items-baseline gap-2">
-            <span className={`text-xl font-bold ${TEAM_COLOR[activeClue.team]}`}>
-              {activeClue.word}
-            </span>
-            <span className="text-base text-gray-500">
-              {activeClue.count === 0 ? '∞' : activeClue.count}
-            </span>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
-        )}
-      </div>
+    <div className={`rounded-xl border-2 px-4 py-3 shadow-sm bg-white ${TEAM_BORDER[game.current_team]}`}>
 
-      {/* Spymaster input — always rendered to prevent layout jump; hidden after submit or when game ends */}
+      {/* Active clue — shown to everyone */}
+      {activeClue && (
+        <div className="min-h-8 flex items-center justify-center gap-3">
+          <span className={`text-2xl font-bold tracking-wide ${TEAM_COLOR[activeClue.team]}`}>
+            {activeClue.word}
+          </span>
+          <span className={`text-lg font-semibold ${TEAM_COLOR[activeClue.team]} opacity-70`}>
+            {activeClue.count === 0 ? '∞' : activeClue.count}
+          </span>
+        </div>
+      )}
+
+      {/* No active clue — different message per role */}
+      {!activeClue && (
+        <div className="min-h-8 flex items-center justify-center">
+          {isSpymaster ? (
+            <p className="text-xs font-medium text-gray-400 tracking-wide">הזן רמז לקבוצה שלך</p>
+          ) : (
+            <p className="text-sm text-gray-400">ממתין לרמז מהמרגל...</p>
+          )}
+        </div>
+      )}
+
+      {/* Spymaster input — always rendered for layout stability; hidden when clue given or game over */}
       {isSpymaster && (
-        <form ref={formRef} onSubmit={handleSubmit} className={`flex gap-2 ${(activeClue || game.status === 'finished') ? 'invisible' : ''}`}>
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className={`flex gap-2 mt-2 ${(activeClue || game.status === 'finished') ? 'invisible' : ''}`}
+        >
           <input
             name="word"
             placeholder="מילת רמז"
             required
             autoComplete="off"
             dir="rtl"
-            className="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
           />
           <select
             name="count"
             defaultValue="2"
-            className="rounded-lg border border-gray-200 px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="rounded-lg border border-gray-200 px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-300"
           >
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
               <option key={n} value={n}>{n}</option>
@@ -76,7 +93,11 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
           </select>
           <button
             type="submit"
-            className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
+            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
+              game.current_team === 'red'
+                ? 'bg-red-500 hover:bg-red-600'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             שלח
           </button>

@@ -270,20 +270,42 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       )}
 
       {clues.length > 0 && (
-        <div className="flex gap-4 text-xs font-medium">
-          <div className="flex-1 flex flex-col gap-0.5 text-right">
-            {clues.filter((c) => c.team === 'red').map((clue) => (
-              <span key={clue.id} className="text-red-600">
-                {clue.word} {clue.count === 0 ? '∞' : clue.count}
-              </span>
-            ))}
-          </div>
-          <div className="flex-1 flex flex-col gap-0.5 text-left">
-            {clues.filter((c) => c.team === 'blue').map((clue) => (
-              <span key={clue.id} className="text-blue-600">
-                {clue.word} {clue.count === 0 ? '∞' : clue.count}
-              </span>
-            ))}
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 text-center mb-2 tracking-wide">היסטוריית רמזים</p>
+          <div className="flex gap-3">
+            {/* Red clues */}
+            <div className="flex-1 flex flex-col gap-1.5">
+              <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                <span className="text-xs font-bold text-red-600">אדום</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+              </div>
+              {clues.filter((c) => c.team === 'red').map((clue) => (
+                <div key={clue.id} className="flex items-baseline justify-end gap-1.5">
+                  <span className="text-xs text-gray-500">{clue.count === 0 ? '∞' : clue.count}</span>
+                  <span className="text-xs font-semibold text-red-700 bg-red-50 rounded-md px-2 py-0.5">
+                    {clue.word}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-px bg-gray-100" />
+
+            {/* Blue clues */}
+            <div className="flex-1 flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
+                <span className="text-xs font-bold text-blue-700">כחול</span>
+              </div>
+              {clues.filter((c) => c.team === 'blue').map((clue) => (
+                <div key={clue.id} className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-semibold text-blue-800 bg-blue-50 rounded-md px-2 py-0.5">
+                    {clue.word}
+                  </span>
+                  <span className="text-xs text-gray-500">{clue.count === 0 ? '∞' : clue.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
