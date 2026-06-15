@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { startNewGame } from '@/app/actions'
 import GameCard from './GameCard'
 import CluePanel from './CluePanel'
 import SharePanel from './SharePanel'
@@ -54,7 +57,9 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
   )
   const [hasGuessedThisTurn, setHasGuessedThisTurn] = useState(false)
   const [endTurnPending, setEndTurnPending] = useState(false)
+  const [newGamePending, setNewGamePending] = useState(false)
   const supabase = useMemo(() => createClient(), [])
+  const router = useRouter()
 
   // Refs to avoid stale closures in realtime handlers
   const stateRef = useRef({ game, cards })
@@ -64,9 +69,10 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
   const appliedVersion = useRef(initialGame.version)
 
   // Counts card clicks that are in-flight (optimistic but not yet server-confirmed).
-  // While pending > 0, we skip intermediate realtime game events and only apply
-  // the final one. This prevents the turn indicator from hopping during rapid clicks.
   const pendingClicks = useRef(0)
+
+  // Supabase channel ref — needed to send broadcasts from outside the useEffect
+  const channelRef = useRef<RealtimeChannel | null>(null)
 
   // Clear the active clue and guess tracker whenever the turn changes
   const prevTeam = useRef(initialGame.current_team)
@@ -78,9 +84,25 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
     }
   }, [game.current_team])
 
+  // DB fallback: if migration 007 was run and next_game_code is set, navigate
+  useEffect(() => {
+    if (!game.next_game_code) return
+    const path = isSpymaster && game.next_game_spymaster_token
+      ? `/game/${game.next_game_code}?spymaster=${game.next_game_spymaster_token}`
+      : `/game/${game.next_game_code}`
+    router.push(path)
+  }, [game.next_game_code, game.next_game_spymaster_token, isSpymaster, router])
+
   useEffect(() => {
     const channel = supabase
       .channel(`game:${game.id}`)
+      // Primary mechanism: broadcast from the client that creates the new game
+      .on('broadcast', { event: 'new_game' }, ({ payload }) => {
+        const path = isSpymaster && payload.spymaster_token
+          ? `/game/${payload.code}?spymaster=${payload.spymaster_token}`
+          : `/game/${payload.code}`
+        router.push(path)
+      })
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'cards', filter: `game_id=eq.${game.id}` },
@@ -93,9 +115,6 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
             prev.map((c) => (c.id === newCard.id ? { ...c, ...newCard } : c))
           )
 
-          // For other players (non-clicker): derive game state from the card event
-          // so their board updates atomically with the card flip.
-          // Skip if we applied this optimistically already, or if game is over.
           if (newCard.revealed && !wasAlreadyRevealed && g.status !== 'finished') {
             const updates = deriveGameUpdates(g, newCard)
             if (Object.keys(updates).length > 0) {
@@ -111,21 +130,13 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
           const newGame = payload.new as Game
           const { game: g } = stateRef.current
 
-          // Never revert game status backward (finished → active would undo a game-over
-          // that we applied optimistically before stale queued events arrived).
           if ((STATUS_ORDER[newGame.status] ?? 0) < (STATUS_ORDER[g.status] ?? 0)) return
-
-          // Drop duplicate or out-of-order events.
           if (newGame.version <= appliedVersion.current) return
           appliedVersion.current = newGame.version
 
-          // Skip intermediate events while we still have in-flight clicks.
-          // This prevents the turn indicator from hopping through intermediate states
-          // when several cards are clicked rapidly before any realtime event arrives.
           if (pendingClicks.current > 0) {
             pendingClicks.current -= 1
             if (pendingClicks.current > 0) return
-            // pendingClicks just reached 0 — this is the last expected event; fall through.
           }
 
           setGame((prev) => ({ ...prev, ...newGame }))
@@ -142,31 +153,70 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       )
       .subscribe()
 
+    channelRef.current = channel
     return () => { supabase.removeChannel(channel) }
-  }, [game.id, supabase])
+  }, [game.id, supabase, isSpymaster, router])
 
-  function handleReveal(cardId: string) {
+  // Keep a stable ref to handleStartNewGame so the window listener always
+  // calls the latest version (correct game.id, isSpymaster, etc.)
+  const handleStartNewGameRef = useRef<() => void>(() => {})
+
+  // Window listener: lets the header button (CreateGameButton) delegate here
+  // so we can broadcast on the channel we own.
+  useEffect(() => {
+    function onHeaderNewGame() { handleStartNewGameRef.current() }
+    window.addEventListener('codenames:start-new-game', onHeaderNewGame)
+    return () => window.removeEventListener('codenames:start-new-game', onHeaderNewGame)
+  }, [])
+
+  async function handleStartNewGame() {
+    if (newGamePending) return
+    setNewGamePending(true)
+    try {
+      const { code, spymasterToken } = await startNewGame(game.id)
+
+      // Broadcast to all other connected clients
+      await channelRef.current?.send({
+        type: 'broadcast',
+        event: 'new_game',
+        payload: { code, spymaster_token: spymasterToken },
+      })
+
+      // Navigate current client
+      const path = isSpymaster
+        ? `/game/${code}?spymaster=${spymasterToken}`
+        : `/game/${code}`
+      router.push(path)
+    } finally {
+      setNewGamePending(false)
+    }
+  }
+
+  // Keep ref in sync after every render
+  useEffect(() => { handleStartNewGameRef.current = handleStartNewGame })
+
+  async function handleReveal(cardId: string) {
     if (game.status !== 'active') return
     const card = cards.find((c) => c.id === cardId)
     if (!card || card.revealed) return
 
     setHasGuessedThisTurn(true)
 
-    // Count this click so the realtime handler knows to skip intermediate events
-    pendingClicks.current += 1
-
-    // Optimistic: flip card and update game state instantly
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, revealed: true } : c)))
     const updates = deriveGameUpdates(game, card)
-    if (Object.keys(updates).length > 0) {
+    const hasGameUpdates = Object.keys(updates).length > 0
+    if (hasGameUpdates) {
       setGame((prev) => ({ ...prev, ...updates }))
+      pendingClicks.current += 1
     }
 
-    // Persist: plain UPDATE calls (same as old server action — no FOR UPDATE lock needed)
-    supabase.from('cards').update({ revealed: true }).eq('id', cardId)
-    if (Object.keys(updates).length > 0) {
-      supabase.from('games').update(updates).eq('id', game.id)
+    const ops: PromiseLike<unknown>[] = [
+      supabase.from('cards').update({ revealed: true }).eq('id', cardId),
+    ]
+    if (hasGameUpdates) {
+      ops.push(supabase.from('games').update(updates).eq('id', game.id))
     }
+    await Promise.all(ops)
   }
 
   async function handleEndTurn() {
@@ -189,25 +239,31 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
 
         <div className="text-center">
           <p className="text-xs text-gray-400 mb-0.5">תור</p>
-          <p className={`font-bold text-sm ${game.current_team === 'red' ? 'text-red-600' : 'text-blue-600'}`}>
+          <p className={`font-bold text-sm ${game.current_team === 'red' ? 'text-red-600' : 'text-blue-700'}`}>
             {TEAM_LABEL[game.current_team]}
           </p>
         </div>
 
-        <span className="text-3xl font-bold text-blue-600">{game.blue_remaining}</span>
+        <span className="text-3xl font-bold text-blue-700">{game.blue_remaining}</span>
       </div>
 
       {/* Winner banner / Clue panel */}
       {isFinished ? (
-        <div className={`rounded-xl border-2 px-5 py-5 text-center ${
+        <div className={`rounded-xl border-2 px-5 py-5 text-center flex flex-col items-center gap-3 ${
           game.winner === 'red'
-            ? 'bg-red-50 border-red-300'
-            : 'bg-blue-50 border-blue-300'
+            ? 'bg-red-600 border-red-700'
+            : 'bg-blue-700 border-blue-800'
         }`}>
-          <p className="text-4xl mb-2">{game.winner === 'red' ? '🔴' : '🔵'}</p>
-          <p className={`text-2xl font-bold ${game.winner === 'red' ? 'text-red-700' : 'text-blue-700'}`}>
+          <p className="text-2xl font-bold text-white">
             קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
           </p>
+          <button
+            onClick={handleStartNewGame}
+            disabled={newGamePending}
+            className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition-colors"
+          >
+            {newGamePending ? 'יוצר משחק...' : 'משחק חדש לכולם'}
+          </button>
         </div>
       ) : (
         <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />

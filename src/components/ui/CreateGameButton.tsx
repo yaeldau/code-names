@@ -18,9 +18,11 @@ function shuffle<T>(arr: T[]): T[] {
 interface CreateGameButtonProps {
   label: string
   className: string
+  /** When set, delegates new game creation to GameBoard (which broadcasts to all clients). */
+  currentGameId?: string
 }
 
-export default function CreateGameButton({ label, className }: CreateGameButtonProps) {
+export default function CreateGameButton({ label, className, currentGameId }: CreateGameButtonProps) {
   const [pending, setPending] = useState(false)
   const router = useRouter()
 
@@ -28,6 +30,14 @@ export default function CreateGameButton({ label, className }: CreateGameButtonP
     if (pending) return
     setPending(true)
 
+    if (currentGameId) {
+      // GameBoard owns the Supabase channel — delegate so it can broadcast to all clients.
+      // Page will navigate away; no need to reset pending.
+      window.dispatchEvent(new CustomEvent('codenames:start-new-game'))
+      return
+    }
+
+    // Homepage / standalone: create a fresh game for this user only
     const supabase = createClient()
     const selectedWords = shuffle(words as string[]).slice(0, 25)
     const types = shuffle<CardType>([
@@ -43,11 +53,11 @@ export default function CreateGameButton({ label, className }: CreateGameButtonP
     })
 
     if (error || !data?.code) {
-      setPending(false)
+      setPending(false) // only reset on failure — on success the page navigates away
       return
     }
-
     router.push(`/game/${data.code}`)
+    // Leave pending=true; spinner stays until the new page mounts and this component unmounts
   }
 
   return (

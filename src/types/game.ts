@@ -13,6 +13,8 @@ export interface Game {
   spymaster_token: string
   version: number
   created_at: string
+  next_game_code: string | null
+  next_game_spymaster_token: string | null
 }
 
 export interface Card {
