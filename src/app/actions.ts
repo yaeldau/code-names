@@ -3,26 +3,10 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import words from '@/words/hebrew.json'
-import type { CardType } from '@/types/game'
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
+import { sampleWords, buildCardTypes } from '@/lib/words'
 
 function newGameWords() {
-  const selectedWords = shuffle(words as string[]).slice(0, 25)
-  const types = shuffle<CardType>([
-    ...Array<CardType>(9).fill('red'),
-    ...Array<CardType>(8).fill('blue'),
-    ...Array<CardType>(7).fill('neutral'),
-    'assassin',
-  ])
-  return { selectedWords, types }
+  return { selectedWords: sampleWords(words as string[]), types: buildCardTypes() }
 }
 
 export async function createGame(): Promise<void> {

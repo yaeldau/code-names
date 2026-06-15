@@ -8,6 +8,7 @@ import { startNewGame } from '@/app/actions'
 import GameCard from './GameCard'
 import CluePanel from './CluePanel'
 import SharePanel from './SharePanel'
+import { deriveGameUpdates } from '@/lib/game-logic'
 import type { Card, Clue, Game, Team } from '@/types/game'
 
 interface GameBoardProps {
@@ -19,34 +20,6 @@ interface GameBoardProps {
 
 const TEAM_LABEL: Record<string, string> = { red: 'אדום', blue: 'כחול' }
 const STATUS_ORDER: Record<string, number> = { waiting: 0, active: 1, finished: 2 }
-
-function deriveGameUpdates(game: Game, card: Card): Partial<Game> {
-  const opponent: Team = game.current_team === 'red' ? 'blue' : 'red'
-  const updates: Partial<Game> = {}
-
-  if (card.type === 'assassin') {
-    updates.status = 'finished'
-    updates.winner = opponent
-  } else {
-    if (card.type === 'red') updates.red_remaining = game.red_remaining - 1
-    if (card.type === 'blue') updates.blue_remaining = game.blue_remaining - 1
-
-    const redLeft = updates.red_remaining ?? game.red_remaining
-    const blueLeft = updates.blue_remaining ?? game.blue_remaining
-
-    if (redLeft === 0) {
-      updates.status = 'finished'
-      updates.winner = 'red'
-    } else if (blueLeft === 0) {
-      updates.status = 'finished'
-      updates.winner = 'blue'
-    } else if (card.type !== game.current_team) {
-      updates.current_team = opponent
-    }
-  }
-
-  return updates
-}
 
 export default function GameBoard({ initialGame, initialCards, initialClues, isSpymaster }: GameBoardProps) {
   const [game, setGame] = useState<Game>(initialGame)
