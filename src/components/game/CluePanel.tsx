@@ -46,10 +46,7 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
     <div className={`rounded-xl border-2 shadow-sm bg-white ${TEAM_BORDER[game.current_team]} relative px-4 py-3`}>
 
       {/* Invisible skeleton — defines the card height without rendering anything */}
-      <div className="invisible select-none pointer-events-none" aria-hidden>
-        <div className="min-h-8" />
-        <div className="mt-2 h-[38px]" />
-      </div>
+      <div className="invisible select-none pointer-events-none h-[38px]" aria-hidden />
 
       {/* Spymaster form — centered vertically in the card */}
       {isSpymaster && (
