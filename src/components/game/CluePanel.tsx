@@ -19,10 +19,9 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
   const formRef = useRef<HTMLFormElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
-  if (game.status === 'finished') return null
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (game.status !== 'active') return
     const formData = new FormData(e.currentTarget)
     const word = (formData.get('word') as string)?.trim()
     const count = parseInt(formData.get('count') as string ?? '1')
@@ -54,9 +53,9 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
         )}
       </div>
 
-      {/* Spymaster input — always rendered to prevent layout jump; hidden after submit */}
+      {/* Spymaster input — always rendered to prevent layout jump; hidden after submit or when game ends */}
       {isSpymaster && (
-        <form ref={formRef} onSubmit={handleSubmit} className={`flex gap-2 ${activeClue ? 'invisible' : ''}`}>
+        <form ref={formRef} onSubmit={handleSubmit} className={`flex gap-2 ${(activeClue || game.status === 'finished') ? 'invisible' : ''}`}>
           <input
             name="word"
             placeholder="מילת רמז"

@@ -220,7 +220,23 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         <span className="text-3xl font-bold text-blue-700">{game.blue_remaining}</span>
       </div>
 
-      {/* Winner banner (same height as CluePanel) / Clue panel */}
+      {/* Clue panel — always rendered so board position never changes */}
+      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
+
+      {/* Board */}
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        {sorted.map((card) => (
+          <GameCard
+            key={card.id}
+            card={card}
+            isSpymaster={isSpymaster}
+            gameStatus={game.status}
+            onReveal={handleReveal}
+          />
+        ))}
+      </div>
+
+      {/* Winner banner (below board) / End turn */}
       {isFinished ? (
         <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
           game.winner === 'red'
@@ -238,25 +254,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
             {newGamePending ? 'יוצר משחק...' : 'משחק חדש'}
           </button>
         </div>
-      ) : (
-        <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
-      )}
-
-      {/* Board */}
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-        {sorted.map((card) => (
-          <GameCard
-            key={card.id}
-            card={card}
-            isSpymaster={isSpymaster}
-            gameStatus={game.status}
-            onReveal={handleReveal}
-          />
-        ))}
-      </div>
-
-      {/* End turn */}
-      {!isFinished && !isSpymaster && (
+      ) : !isSpymaster && (
         <button
           onClick={handleEndTurn}
           disabled={endTurnPending || !hasGuessedThisTurn}
