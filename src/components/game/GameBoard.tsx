@@ -220,41 +220,39 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
         <span className="text-3xl font-bold text-blue-700">{game.blue_remaining}</span>
       </div>
 
-      {/* Clue panel — always occupies same height so board never shifts */}
-      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
-
-      {/* Board — winner banner overlays on top so position never changes */}
-      <div className="relative">
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-          {sorted.map((card) => (
-            <GameCard
-              key={card.id}
-              card={card}
-              isSpymaster={isSpymaster}
-              gameStatus={game.status}
-              onReveal={handleReveal}
-            />
-          ))}
+      {/* Winner banner (same height as CluePanel) / Clue panel */}
+      {isFinished ? (
+        <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
+          game.winner === 'red'
+            ? 'bg-red-600 border-red-700'
+            : 'bg-blue-700 border-blue-800'
+        }`}>
+          <p className="text-base font-bold text-white">
+            קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
+          </p>
+          <button
+            onClick={handleStartNewGame}
+            disabled={newGamePending}
+            className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-1.5 text-sm font-semibold text-white transition-colors"
+          >
+            {newGamePending ? 'יוצר משחק...' : 'משחק חדש'}
+          </button>
         </div>
+      ) : (
+        <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
+      )}
 
-        {isFinished && (
-          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl ${
-            game.winner === 'red'
-              ? 'bg-red-600/95'
-              : 'bg-blue-700/95'
-          }`}>
-            <p className="text-2xl font-bold text-white">
-              קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
-            </p>
-            <button
-              onClick={handleStartNewGame}
-              disabled={newGamePending}
-              className="rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-50 px-5 py-2 text-sm font-semibold text-white transition-colors"
-            >
-              {newGamePending ? 'יוצר משחק...' : 'משחק חדש לכולם'}
-            </button>
-          </div>
-        )}
+      {/* Board */}
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        {sorted.map((card) => (
+          <GameCard
+            key={card.id}
+            card={card}
+            isSpymaster={isSpymaster}
+            gameStatus={game.status}
+            onReveal={handleReveal}
+          />
+        ))}
       </div>
 
       {/* End turn */}
