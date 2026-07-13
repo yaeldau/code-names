@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BackButton from '@/components/ui/BackButton'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://shemkod.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shemkod.com'
 
 export const metadata: Metadata = {
   title: 'איך משחקים שם קוד? הוראות משחק Codenames בעברית',

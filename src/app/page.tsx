@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import CreateGameButton from '@/components/ui/CreateGameButton'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://shemkod.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shemkod.com'
 
 export const metadata: Metadata = {
   title: 'שם קוד | משחק Codenames בעברית אונליין — חינמי וללא הרשמה',

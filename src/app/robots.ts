@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/game/', // individual game rooms are ephemeral, not worth indexing
     },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://shemkod.com'}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://shemkod.com'}/sitemap.xml`,
   }
 }

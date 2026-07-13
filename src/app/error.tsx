@@ -10,7 +10,9 @@ interface ErrorProps {
 
 export default function GlobalError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error(error)
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      import('@sentry/nextjs').then(({ captureException }) => captureException(error))
+    }
   }, [error])
 
   return (

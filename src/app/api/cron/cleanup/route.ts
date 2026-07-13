@@ -26,5 +26,13 @@ export async function GET(request: Request) {
     .in('status', ['waiting', 'active'])
     .lt('created_at', oneDayAgo)
 
-  return NextResponse.json({ deleted: { finished: finished ?? 0, abandoned: abandoned ?? 0 } })
+  // Stale feedback rate-limit windows — safe to drop once a day past.
+  const { count: rateLimits } = await supabase
+    .from('feedback_rate_limits')
+    .delete({ count: 'exact' })
+    .lt('window_start', oneDayAgo)
+
+  return NextResponse.json({
+    deleted: { finished: finished ?? 0, abandoned: abandoned ?? 0, rateLimits: rateLimits ?? 0 },
+  })
 }

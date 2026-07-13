@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Heebo } from 'next/font/google'
 import FeedbackWidget from '@/components/ui/FeedbackWidget'
 import './globals.css'
@@ -9,7 +9,11 @@ const heebo = Heebo({
   display: 'swap',
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://shemkod.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shemkod.com'
+
+export const viewport: Viewport = {
+  themeColor: '#0F172A',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -57,11 +61,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
+      <head>
+        {/* Preload font subsets not covered by Next.js's automatic preload (Hebrew is covered, these are not) */}
+        <link rel="preload" href="/_next/static/media/ec516af01d950ed6-s.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/_next/static/media/70b9b96e99f02a56-s.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://o4511579698626560.ingest.de.sentry.io" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-screen bg-bg font-sans antialiased">
         {children}
         <FeedbackWidget />
       </body>
-
     </html>
   )
 }
