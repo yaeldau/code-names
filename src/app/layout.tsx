@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Heebo } from 'next/font/google'
+import FeedbackWidget from '@/components/ui/FeedbackWidget'
 import './globals.css'
 
 const heebo = Heebo({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="min-h-screen bg-bg font-sans antialiased">
         {children}
+        <FeedbackWidget />
       </body>
 
     </html>
