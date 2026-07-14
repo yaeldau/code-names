@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="משקפיים">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <circle cx="28" cy="54" r="16"/><circle cx="72" cy="54" r="16"/><path d="M44 50h12M12 50l4-10M88 50l-4-10" stroke-linecap="round"/>
+  </g>
+</svg>

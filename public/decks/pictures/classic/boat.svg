@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="סירה">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M20 62h60l-8 18H28z" stroke-linejoin="round" stroke-linecap="round"/><path d="M50 62V20l18 14-18 6" stroke-linejoin="round" stroke-linecap="round"/><path d="M38 62V32" stroke-linecap="round"/>
+  </g>
+</svg>

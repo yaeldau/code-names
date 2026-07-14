@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="מכונית">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M16 62V54a6 6 0 0 1 5-5.9L28 46l8-14h28l8 14 7 2a6 6 0 0 1 5 5.9v8" stroke-linejoin="round" stroke-linecap="round"/><path d="M16 62h68" stroke-linecap="round"/><circle cx="32" cy="66" r="7"/><circle cx="68" cy="66" r="7"/>
+  </g>
+</svg>

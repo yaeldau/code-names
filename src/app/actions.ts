@@ -2,20 +2,32 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import words from '@/words/hebrew.json'
-import { sampleWords, buildCardTypes } from '@/lib/words'
+import { buildCardTypes } from '@/lib/words'
+import { getDeck, sampleDeck } from '@/decks/registry'
+import type { GameMode } from '@/types/game'
 
-function newGameWords() {
-  return { selectedWords: sampleWords(words as string[]), types: buildCardTypes() }
+function newGamePayload(mode: GameMode, theme?: string) {
+  const deck = getDeck(mode, theme)
+  const sampled = sampleDeck(deck, 25)
+  return {
+    words: sampled.map((c) => c.label),
+    imageKeys: sampled.some((c) => c.imageKey) ? sampled.map((c) => c.imageKey ?? null) : null,
+    types: buildCardTypes(),
+    mode: deck.mode,
+    theme: deck.theme,
+  }
 }
 
-export async function createGame(): Promise<void> {
+export async function createGame(mode: GameMode = 'words', theme?: string): Promise<void> {
   const supabase = await createClient()
-  const { selectedWords, types } = newGameWords()
+  const { words, imageKeys, types, mode: resolvedMode, theme: resolvedTheme } = newGamePayload(mode, theme)
 
   const { data, error } = await supabase.rpc('create_game', {
-    p_words: selectedWords,
+    p_words: words,
     p_types: types,
+    p_image_keys: imageKeys,
+    p_mode: resolvedMode,
+    p_theme: resolvedTheme,
   })
 
   if (error || !data?.code) throw new Error('Failed to create game')
@@ -24,29 +36,37 @@ export async function createGame(): Promise<void> {
 }
 
 /** Creates a new game and returns its code (used by the homepage button for pre-warming). */
-export async function createNewGame(): Promise<string> {
+export async function createNewGame(mode: GameMode = 'words', theme?: string): Promise<string> {
   const supabase = await createClient()
-  const { selectedWords, types } = newGameWords()
+  const { words, imageKeys, types, mode: resolvedMode, theme: resolvedTheme } = newGamePayload(mode, theme)
 
   const { data, error } = await supabase.rpc('create_game', {
-    p_words: selectedWords,
+    p_words: words,
     p_types: types,
+    p_image_keys: imageKeys,
+    p_mode: resolvedMode,
+    p_theme: resolvedTheme,
   })
 
   if (error || !data?.code) throw new Error('Failed to create game')
   return data.code as string
 }
 
-/** Creates a new game and returns its code + spymaster token for broadcasting. */
+/** Creates a new game (same mode/theme as the current one) and returns its code + spymaster token for broadcasting. */
 export async function startNewGame(
-  currentGameId: string
+  currentGameId: string,
+  mode: GameMode = 'words',
+  theme?: string
 ): Promise<{ code: string; spymasterToken: string }> {
   const supabase = await createClient()
-  const { selectedWords, types } = newGameWords()
+  const { words, imageKeys, types, mode: resolvedMode, theme: resolvedTheme } = newGamePayload(mode, theme)
 
   const { data, error } = await supabase.rpc('create_game', {
-    p_words: selectedWords,
+    p_words: words,
     p_types: types,
+    p_image_keys: imageKeys,
+    p_mode: resolvedMode,
+    p_theme: resolvedTheme,
   })
 
   if (error || !data?.code) throw new Error('Failed to create game')

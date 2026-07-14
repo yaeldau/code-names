@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import CreateGameButton from '@/components/ui/CreateGameButton'
+import GameModeSelector from '@/components/ui/GameModeSelector'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shemkod.com'
 
@@ -38,10 +38,7 @@ export default function HomePage() {
         </div>
 
         <div className="w-full max-w-xs flex flex-col gap-3">
-          <CreateGameButton
-            label="צור משחק חדש"
-            className="w-full rounded-2xl bg-gray-900 py-4 text-lg font-semibold text-white hover:bg-gray-800 active:bg-gray-950 disabled:opacity-50 transition-colors"
-          />
+          <GameModeSelector />
 
           <Link
             href="/how-to-play"

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="מטוס">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M50 12v56M50 12l-10 16v14l-30 12v8l30-8v10l-10 8v6l16-6 16 6v-6l-10-8V72l30 8v-8l-30-12V28z" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

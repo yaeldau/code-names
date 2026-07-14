@@ -149,7 +149,7 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
     if (newGamePending) return
     setNewGamePending(true)
     try {
-      const { code, spymasterToken } = await startNewGame(game.id)
+      const { code, spymasterToken } = await startNewGame(game.id, game.mode, game.theme)
 
       // Broadcast to all other connected clients
       await channelRef.current?.send({
@@ -241,6 +241,8 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
             card={card}
             isSpymaster={isSpymaster}
             gameStatus={game.status}
+            mode={game.mode}
+            theme={game.theme}
             onReveal={handleReveal}
           />
         ))}

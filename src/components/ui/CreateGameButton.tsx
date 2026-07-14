@@ -3,24 +3,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNewGame } from '@/app/actions'
+import type { GameMode } from '@/types/game'
 
 interface CreateGameButtonProps {
   label: string
   className: string
+  /** Content mode for a freshly created game. Ignored when currentGameId is set (rematch keeps the current game's mode). */
+  mode?: GameMode
   /** When set, delegates new game creation to GameBoard (which broadcasts to all clients). */
   currentGameId?: string
 }
 
-export default function CreateGameButton({ label, className, currentGameId }: CreateGameButtonProps) {
+export default function CreateGameButton({ label, className, mode = 'words', currentGameId }: CreateGameButtonProps) {
   const [pending, setPending] = useState(false)
   const router = useRouter()
-  // Pre-warmed game promise — started on mount so the game is likely ready by click time
-  const preCreated = useRef<Promise<string | null> | null>(null)
+  // Pre-warmed game promise — started on mount so the game is likely ready by click time.
+  // Keyed by mode so a mode switch after mount doesn't serve a stale pre-created game.
+  const preCreated = useRef<{ mode: GameMode; promise: Promise<string | null> } | null>(null)
 
   useEffect(() => {
     if (currentGameId) return
-    preCreated.current = createNewGame().catch(() => null)
-  }, [currentGameId])
+    preCreated.current = { mode, promise: createNewGame(mode).catch(() => null) }
+  }, [currentGameId, mode])
 
   async function handleClick() {
     if (pending) return
@@ -32,7 +36,8 @@ export default function CreateGameButton({ label, className, currentGameId }: Cr
       return
     }
 
-    const code = (await preCreated.current) ?? await createNewGame().catch(() => null)
+    const cached = preCreated.current?.mode === mode ? preCreated.current.promise : null
+    const code = (await cached) ?? await createNewGame(mode).catch(() => null)
     if (code) {
       router.push(`/game/${code}`)
     } else {

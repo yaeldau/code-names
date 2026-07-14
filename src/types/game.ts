@@ -1,6 +1,8 @@
 export type CardType = 'red' | 'blue' | 'neutral' | 'assassin'
 export type Team = 'red' | 'blue'
 export type GameStatus = 'waiting' | 'active' | 'finished'
+/** Determines what content cards display. Add new modes here + in the DB enum + src/decks/registry.ts. */
+export type GameMode = 'words' | 'pictures'
 
 export interface Game {
   id: string
@@ -15,12 +17,16 @@ export interface Game {
   created_at: string
   next_game_code: string | null
   next_game_spymaster_token: string | null
+  mode: GameMode
+  theme: string
 }
 
 export interface Card {
   id: string
   game_id: string
   word: string
+  /** Image asset key within the game's theme folder. Set only when mode is 'pictures'. */
+  image_key: string | null
   type: CardType
   position: number
   revealed: boolean

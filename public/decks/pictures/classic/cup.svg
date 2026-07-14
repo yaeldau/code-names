@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="כוס">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M26 30h40v28a20 20 0 0 1-40 0z" stroke-linejoin="round"/><path d="M66 38h6a10 10 0 0 1 0 20h-6" stroke-linecap="round"/><path d="M32 78h28" stroke-linecap="round"/>
+  </g>
+</svg>

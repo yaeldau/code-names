@@ -17,7 +17,3 @@ export function buildCardTypes(): CardType[] {
     'assassin',
   ])
 }
-
-export function sampleWords(wordBank: string[]): string[] {
-  return shuffle(wordBank).slice(0, 25)
-}

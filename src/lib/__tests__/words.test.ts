@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shuffle, buildCardTypes, sampleWords } from '../words'
-import wordBank from '@/words/hebrew.json'
+import { shuffle, buildCardTypes } from '../words'
 
 // ─── shuffle ──────────────────────────────────────────────────────────────────
 
@@ -57,33 +56,5 @@ describe('buildCardTypes', () => {
   it('contains no unknown types', () => {
     const valid = new Set(['red', 'blue', 'neutral', 'assassin'])
     expect(buildCardTypes().every((t) => valid.has(t))).toBe(true)
-  })
-})
-
-// ─── sampleWords ──────────────────────────────────────────────────────────────
-
-describe('sampleWords', () => {
-  const bank = wordBank as string[]
-
-  it('returns exactly 25 words', () => {
-    expect(sampleWords(bank)).toHaveLength(25)
-  })
-
-  it('every word comes from the word bank', () => {
-    const bankSet = new Set(bank)
-    expect(sampleWords(bank).every((w) => bankSet.has(w))).toBe(true)
-  })
-
-  it('returns no duplicate words', () => {
-    const selected = sampleWords(bank)
-    expect(new Set(selected).size).toBe(25)
-  })
-
-  it('word bank itself has no duplicates', () => {
-    expect(new Set(bank).size).toBe(bank.length)
-  })
-
-  it('word bank is large enough to fill a board', () => {
-    expect(bank.length).toBeGreaterThanOrEqual(25)
   })
 })

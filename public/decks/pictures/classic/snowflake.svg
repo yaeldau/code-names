@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="פתית שלג">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <g stroke-linecap="round"><path d="M50 10v80M15 30l70 40M85 30l-70 40"/><path d="M50 20l-8 8M50 20l8 8M50 80l-8-8M50 80l8-8"/><path d="M22 34l3 11-11 3M78 66l-3-11 11-3M78 34l-11-3 3-11M22 66l11 3-3 11"/></g>
+  </g>
+</svg>

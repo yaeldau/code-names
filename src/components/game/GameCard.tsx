@@ -1,11 +1,14 @@
 'use client'
 
-import type { Card, GameStatus } from '@/types/game'
+import { imagePathFor } from '@/decks/registry'
+import type { Card, GameMode, GameStatus } from '@/types/game'
 
 interface GameCardProps {
   card: Card
   isSpymaster: boolean
   gameStatus: GameStatus
+  mode: GameMode
+  theme: string
   onReveal: (id: string) => void
 }
 
@@ -53,23 +56,42 @@ function cardVariant(card: Card, isSpymaster: boolean, gameStatus: GameStatus): 
   return 'bg-surface border-border text-ink shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.97] cursor-pointer'
 }
 
-export default function GameCard({ card, isSpymaster, gameStatus, onReveal }: GameCardProps) {
+export default function GameCard({ card, isSpymaster, gameStatus, mode, theme, onReveal }: GameCardProps) {
   const clickable = !card.revealed && gameStatus === 'active' && !isSpymaster
+
+  // Pictures mode swaps the word text for an image on the plain, clickable
+  // player-facing tile. Every other state (spymaster, revealed, game-over
+  // reveal-all) keeps showing the label exactly as Words mode does today.
+  const showImage = mode === 'pictures' && !!card.image_key && clickable
 
   return (
     <button
       onClick={() => clickable && onReveal(card.id)}
       disabled={!clickable}
       className={[
-        'aspect-[3/2] rounded-xl border',
+        'aspect-[3/2] rounded-xl border overflow-hidden',
         'flex items-center justify-center',
-        'text-xs sm:text-sm font-semibold text-center leading-tight px-1.5',
+        'text-xs sm:text-sm font-semibold text-center leading-tight',
+        showImage ? '' : 'px-1.5',
         'transition-all duration-150 select-none',
         cardVariant(card, isSpymaster, gameStatus),
         !clickable ? 'cursor-default' : '',
       ].join(' ')}
     >
-      {card.word}
+      {showImage ? (
+        // Local, trusted SVG icons — tiny vector files with no size variants
+        // to generate, so next/image's optimization pipeline has nothing to add here.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imagePathFor(theme, card.image_key!)}
+          alt={card.word}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        card.word
+      )}
     </button>
   )
 }

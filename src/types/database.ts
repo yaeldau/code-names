@@ -1,4 +1,4 @@
-import type { CardType, GameStatus, Team } from './game'
+import type { CardType, GameMode, GameStatus, Team } from './game'
 
 export type Database = {
   public: {
@@ -17,6 +17,8 @@ export type Database = {
           created_at: string
           next_game_code: string | null
           next_game_spymaster_token: string | null
+          mode: GameMode
+          theme: string
         }
         Insert: {
           code: string
@@ -26,6 +28,8 @@ export type Database = {
           blue_remaining?: number
           winner?: Team | null
           spymaster_token?: string
+          mode?: GameMode
+          theme?: string
         }
         Update: Partial<{
           status: GameStatus
@@ -42,6 +46,7 @@ export type Database = {
           id: string
           game_id: string
           word: string
+          image_key: string | null
           type: CardType
           position: number
           revealed: boolean
@@ -49,6 +54,7 @@ export type Database = {
         Insert: {
           game_id: string
           word: string
+          image_key?: string | null
           type: CardType
           position: number
           revealed?: boolean

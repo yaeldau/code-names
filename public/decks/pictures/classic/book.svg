@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ספר">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M50 26c-8-8-22-8-34-6v54c12-2 26-2 34 6 8-8 22-8 34-6V20c-12-2-26-2-34 6z" stroke-linejoin="round" stroke-linecap="round"/><path d="M50 26v54" stroke-linecap="round"/>
+  </g>
+</svg>

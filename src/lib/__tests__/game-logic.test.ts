@@ -18,6 +18,8 @@ function makeGame(overrides: Partial<Game> = {}): Game {
     created_at: '2024-01-01T00:00:00Z',
     next_game_code: null,
     next_game_spymaster_token: null,
+    mode: 'words',
+    theme: 'classic',
     ...overrides,
   }
 }
@@ -27,6 +29,7 @@ function makeCard(overrides: Partial<Card> = {}): Card {
     id: 'card-1',
     game_id: 'game-1',
     word: 'מים',
+    image_key: null,
     type: 'red',
     position: 0,
     revealed: false,
