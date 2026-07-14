@@ -2,6 +2,12 @@
 -- modes) plus themed decks within a mode. Fully additive and backward
 -- compatible: existing rows default to mode='words', theme='classic', and
 -- image_key=NULL, so the current Words-mode behavior is unchanged.
+--
+-- Wrapped in a single transaction so the create_game DROP+CREATE is atomic —
+-- no window where a concurrent production request could see the function
+-- missing. Safe to run against a live database with real traffic.
+
+BEGIN;
 
 CREATE TYPE game_mode AS ENUM ('words', 'pictures');
 
@@ -59,3 +65,9 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.create_game(text[], text[], text[], text, text) TO anon, authenticated;
+
+COMMIT;
+
+-- Force PostgREST to pick up the new function/columns immediately rather
+-- than waiting for its next periodic schema cache refresh.
+NOTIFY pgrst, 'reload schema';
