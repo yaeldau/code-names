@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="גלידה">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M32 44a18 18 0 0 1 36 0z" stroke-linejoin="round"/><path d="M32 44l16 46 16-46" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

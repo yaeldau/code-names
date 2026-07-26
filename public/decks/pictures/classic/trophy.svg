@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="גביע">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M32 18h36v20c0 14-8 24-18 24s-18-10-18-24z" stroke-linejoin="round"/><path d="M32 22H18v6c0 10 6 16 14 18M68 22h14v6c0 10-6 16-14 18" stroke-linejoin="round" stroke-linecap="round"/><path d="M50 62v14M36 90h28M40 76h20v14H40z" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

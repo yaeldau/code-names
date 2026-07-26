@@ -56,13 +56,80 @@ function cardVariant(card: Card, isSpymaster: boolean, gameStatus: GameStatus): 
   return 'bg-surface border-border text-ink shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.97] cursor-pointer'
 }
 
+// Pictures mode never shows the word — the image itself is the card's
+// content (like the word is always visible in Words mode). Team colour is
+// communicated as a border + translucent wash layered on top of the image
+// instead of an opaque fill, so the picture stays visible in every state.
+function pictureOverlay(card: Card, isSpymaster: boolean, gameStatus: GameStatus): string | null {
+  if (card.revealed) {
+    if (isSpymaster) {
+      return {
+        red:      'border-game-red/40  bg-game-red/25',
+        blue:     'border-game-blue/40 bg-game-blue/25',
+        neutral:  'border-stone-300/40 bg-stone-400/25',
+        assassin: 'border-assassin/40  bg-assassin/25',
+      }[card.type]
+    }
+    return {
+      red:      'border-game-red-dark  bg-game-red/55',
+      blue:     'border-game-blue-dark bg-game-blue/55',
+      neutral:  'border-revealed       bg-stone-400/40',
+      assassin: 'border-assassin       bg-assassin/55',
+    }[card.type]
+  }
+
+  if (gameStatus === 'finished') {
+    return {
+      red:      'border-game-red/25   bg-game-red/15',
+      blue:     'border-game-blue/25  bg-game-blue/15',
+      neutral:  'border-border        bg-neutral-card/25',
+      assassin: 'border-assassin/20   bg-assassin/12',
+    }[card.type]
+  }
+
+  if (isSpymaster) {
+    return {
+      red:      'border-game-red      bg-game-red/35',
+      blue:     'border-game-blue     bg-game-blue/35',
+      neutral:  'border-stone-300     bg-stone-400/35',
+      assassin: 'border-assassin      bg-assassin/35',
+    }[card.type]
+  }
+
+  return null
+}
+
 export default function GameCard({ card, isSpymaster, gameStatus, mode, theme, onReveal }: GameCardProps) {
   const clickable = !card.revealed && gameStatus === 'active' && !isSpymaster
+  const isPicture = mode === 'pictures' && !!card.image_key
 
-  // Pictures mode swaps the word text for an image on the plain, clickable
-  // player-facing tile. Every other state (spymaster, revealed, game-over
-  // reveal-all) keeps showing the label exactly as Words mode does today.
-  const showImage = mode === 'pictures' && !!card.image_key && clickable
+  if (isPicture) {
+    const overlay = pictureOverlay(card, isSpymaster, gameStatus)
+    return (
+      <button
+        onClick={() => clickable && onReveal(card.id)}
+        disabled={!clickable}
+        className={[
+          'relative aspect-[3/2] rounded-xl border overflow-hidden',
+          'transition-all duration-150 select-none',
+          overlay ?? 'border-border shadow-sm',
+          clickable ? 'hover:shadow-md hover:border-gray-300 active:scale-[0.97] cursor-pointer' : 'cursor-default',
+        ].join(' ')}
+      >
+        {/* Local, trusted SVG icons — tiny vector files with no size variants
+            to generate, so next/image's optimization pipeline has nothing to add here. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imagePathFor(theme, card.image_key!)}
+          alt={card.word}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {overlay && <div className={`absolute inset-0 ${overlay}`} />}
+      </button>
+    )
+  }
 
   return (
     <button
@@ -71,27 +138,13 @@ export default function GameCard({ card, isSpymaster, gameStatus, mode, theme, o
       className={[
         'aspect-[3/2] rounded-xl border overflow-hidden',
         'flex items-center justify-center',
-        'text-xs sm:text-sm font-semibold text-center leading-tight',
-        showImage ? '' : 'px-1.5',
+        'text-xs sm:text-sm font-semibold text-center leading-tight px-1.5',
         'transition-all duration-150 select-none',
         cardVariant(card, isSpymaster, gameStatus),
         !clickable ? 'cursor-default' : '',
       ].join(' ')}
     >
-      {showImage ? (
-        // Local, trusted SVG icons — tiny vector files with no size variants
-        // to generate, so next/image's optimization pipeline has nothing to add here.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imagePathFor(theme, card.image_key!)}
-          alt={card.word}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        card.word
-      )}
+      {card.word}
     </button>
   )
 }

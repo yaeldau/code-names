@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="פטרייה">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M18 42c0-18 14-28 32-28s32 10 32 28z" stroke-linejoin="round"/><path d="M38 42v30a12 12 0 0 0 24 0V42" stroke-linejoin="round" stroke-linecap="round"/><circle cx="34" cy="30" r="3" fill="#0F172A"/><circle cx="52" cy="22" r="3" fill="#0F172A"/><circle cx="66" cy="32" r="3" fill="#0F172A"/>
+  </g>
+</svg>

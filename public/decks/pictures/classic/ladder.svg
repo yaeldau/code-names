@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="סולם">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M32 10L20 90M68 10L80 90" stroke-linecap="round"/><path d="M24 26h50M22 44h54M20 62h58M18 80h60" stroke-linecap="round"/>
+  </g>
+</svg>

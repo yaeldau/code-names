@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { startNewGame } from '@/app/actions'
@@ -258,13 +259,21 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
           <p className="text-base font-bold text-white">
             קבוצת {TEAM_LABEL[game.winner!]} ניצחה!
           </p>
-          <button
-            onClick={handleStartNewGame}
-            disabled={newGamePending}
-            className="rounded-xl bg-white/20 hover:bg-white/30 border border-white/20 disabled:opacity-50 px-4 py-1.5 text-sm font-semibold text-white transition-colors"
-          >
-            {newGamePending ? 'יוצר משחק...' : 'משחק חדש'}
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="text-xs text-white/70 underline underline-offset-2 hover:text-white transition-colors"
+            >
+              משחק מסוג אחר
+            </Link>
+            <button
+              onClick={handleStartNewGame}
+              disabled={newGamePending}
+              className="rounded-xl bg-white/20 hover:bg-white/30 border border-white/20 disabled:opacity-50 px-4 py-1.5 text-sm font-semibold text-white transition-colors"
+            >
+              {newGamePending ? 'יוצר משחק...' : 'משחק חדש'}
+            </button>
+          </div>
         </div>
       ) : !isSpymaster && (
         <button

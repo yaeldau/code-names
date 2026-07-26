@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="פעמון">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M50 14a26 26 0 0 1 26 26v14l8 12H16l8-12V40a26 26 0 0 1 26-26z" stroke-linejoin="round" stroke-linecap="round"/><path d="M42 78a8 8 0 0 0 16 0" stroke-linecap="round"/>
+  </g>
+</svg>

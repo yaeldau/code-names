@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="נעל">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M22 46v24h52c6 0 10-4 10-10 0-8-6-12-14-14l-24-6V46a8 8 0 0 0-16 0z" stroke-linejoin="round" stroke-linecap="round"/><path d="M22 70h60" stroke-linecap="round"/>
+  </g>
+</svg>

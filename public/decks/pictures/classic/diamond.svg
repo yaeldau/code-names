@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="יהלום">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M28 20h44l16 24-38 40-38-40z" stroke-linejoin="round" stroke-linecap="round"/><path d="M28 20l10 24-10-0M72 20L62 44M14 44h72M38 44L50 84 62 44" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>

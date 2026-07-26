@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="נר">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <rect x="38" y="36" width="24" height="54" rx="4" stroke-linejoin="round"/><path d="M50 36V22" stroke-linecap="round"/><path d="M50 8c6 6 6 10 0 14-6-4-6-8 0-14z" stroke-linejoin="round"/>
+  </g>
+</svg>

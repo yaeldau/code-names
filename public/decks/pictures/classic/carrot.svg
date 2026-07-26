@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="גזר">
+  <rect width="100" height="100" rx="14" fill="#F7F8FA"/>
+  <g fill="none" stroke="#0F172A" stroke-width="4">
+    <path d="M32 22h36L52 86c-1 4-3 4-4 0z" stroke-linejoin="round" stroke-linecap="round"/><path d="M40 22c0-8 2-14 8-18M50 22c0-10 0-16 4-20M60 22c0-8-2-14-8-18" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 40h24M40 56h20M42 70h16" stroke-linecap="round"/>
+  </g>
+</svg>
