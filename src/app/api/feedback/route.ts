@@ -5,9 +5,13 @@ import { createServiceClient } from '@/lib/supabase/server'
 import {
   sanitizeMessage,
   sanitizeMetadata,
-  isValidGameCode,
+  sanitizeContact,
+  sanitizeGameContext,
+  sanitizeDevice,
+  isValidFeedbackType,
   buildFeedbackEmail,
   MAX_MESSAGE_LENGTH,
+  type ContactInfo,
 } from '@/lib/feedback'
 
 export const runtime = 'nodejs'
@@ -56,7 +60,7 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
     return errorResponse(400, 'בקשה לא תקינה.')
   }
 
-  const { message, honeypot, pageUrl, gameCode } = body as Record<string, unknown>
+  const { message, honeypot, pageUrl, type, gameContext, device, contact } = body as Record<string, unknown>
 
   // Honeypot: real users never see or fill this field. Bots that fill every
   // field get a fake success so they don't learn to avoid it.
@@ -67,6 +71,37 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
   const cleanMessage = sanitizeMessage(message)
   if (!cleanMessage) {
     return errorResponse(400, `ההודעה חייבת להכיל טקסט, עד ${MAX_MESSAGE_LENGTH} תווים.`)
+  }
+
+  // Contact info is opt-in on the client: the field is only sent at all when
+  // the user turned the "you can reach me" toggle on. Its presence — not its
+  // validity — is what makes an email required; an anonymous submission
+  // (contact omitted entirely) is never blocked here.
+  let cleanContact: ContactInfo | null = null
+  if (contact != null) {
+    cleanContact = sanitizeContact(contact)
+    if (!cleanContact) {
+      return errorResponse(400, 'כתובת האימייל אינה תקינה.')
+    }
+  }
+
+  const feedbackType = isValidFeedbackType(type) ? type : 'other'
+
+  // Built early (needs no env vars or network) so it can be logged below for
+  // local testing even without real Resend credentials configured.
+  const emailBody = buildFeedbackEmail({
+    type: feedbackType,
+    message: cleanMessage,
+    contact: cleanContact,
+    gameContext: sanitizeGameContext(gameContext),
+    device: sanitizeDevice(device),
+    pageUrl: sanitizeMetadata(pageUrl),
+    userAgent: sanitizeMetadata(request.headers.get('user-agent'), 200),
+    timestamp: new Date().toISOString(),
+  })
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[feedback] (dev only) email body:\n${emailBody}`)
   }
 
   const resendApiKey = process.env.RESEND_API_KEY
@@ -97,14 +132,6 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
   if (!allowed) {
     return errorResponse(429, 'נשלחו יותר מדי הודעות. נסו שוב בעוד כמה דקות.')
   }
-
-  const emailBody = buildFeedbackEmail({
-    message: cleanMessage,
-    pageUrl: sanitizeMetadata(pageUrl),
-    gameCode: isValidGameCode(gameCode) ? gameCode.toUpperCase() : null,
-    userAgent: sanitizeMetadata(request.headers.get('user-agent'), 200),
-    timestamp: new Date().toISOString(),
-  })
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
