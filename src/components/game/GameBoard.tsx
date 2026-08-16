@@ -9,6 +9,7 @@ import GameCard from './GameCard'
 import CluePanel from './CluePanel'
 import SharePanel from './SharePanel'
 import { deriveGameUpdates } from '@/lib/game-logic'
+import { setGameFeedbackContext } from '@/lib/game-feedback-context'
 import type { Card, Clue, Game, Team } from '@/types/game'
 
 interface GameBoardProps {
@@ -56,6 +57,26 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       setHasGuessedThisTurn(false)
     }
   }, [game.current_team])
+
+  // Publish a snapshot for the globally-mounted FeedbackWidget (see
+  // src/lib/game-feedback-context.ts) — lets a bug report include what the
+  // submitter was actually looking at, without any extra fetch.
+  useEffect(() => {
+    setGameFeedbackContext({
+      gameCode: game.code,
+      status: game.status,
+      role: isSpymaster ? 'spymaster' : 'guesser',
+      currentTeam: game.current_team,
+      redRemaining: game.red_remaining,
+      blueRemaining: game.blue_remaining,
+      clueWord: activeClue?.word ?? null,
+      clueCount: activeClue?.count ?? null,
+    })
+  }, [game.code, game.status, game.current_team, game.red_remaining, game.blue_remaining, isSpymaster, activeClue])
+
+  // Clear it on unmount so feedback from elsewhere in the app (or a
+  // different game) never carries a stale snapshot.
+  useEffect(() => () => setGameFeedbackContext(null), [])
 
   // DB fallback: if migration 007 was run and next_game_code is set, navigate
   useEffect(() => {
