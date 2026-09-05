@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 
+// INTENTIONALLY UNSCHEDULED. This route deletes finished games after 1 hour
+// and waiting/active games after 24 hours — a short-retention assumption we
+// no longer hold. Game history is now a deliberate product feature (see the
+// admin dashboard and CLAUDE.md), so this is no longer wired up to any Vercel
+// Cron schedule (removed from vercel.json). The route itself is kept as-is
+// for now rather than deleted, in case a *different*, deliberately-scoped
+// cleanup policy is designed later — but nothing currently calls it, and it
+// must not be rescheduled without first deciding what "safe to delete" means
+// under the new retention model.
 export async function GET(request: Request) {
   const auth = request.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
