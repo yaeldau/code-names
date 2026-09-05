@@ -58,7 +58,7 @@ export default function HomePage() {
             <p className="text-sm text-gray-500 leading-relaxed">
               שם קוד הוא{' '}
               <a
-                href="https://he.wikipedia.org/wiki/%D7%A9%D7%9D_%D7%A7%D7%95%D7%93_(%D7%9E%D7%A9%D7%97%D7%A7_%D7%A7%D7%9C%D7%A4%D7%99%D7%9D)"
+                href="https://he.wikipedia.org/wiki/%D7%A9%D7%9D-%D7%A7%D7%95%D7%93_(%D7%9E%D7%A9%D7%97%D7%A7)"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 underline underline-offset-2 hover:text-gray-900"
