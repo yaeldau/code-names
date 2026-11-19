@@ -74,13 +74,13 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
 
   // Contact info is opt-in on the client: the field is only sent at all when
   // the user turned the "you can reach me" toggle on. Its presence — not its
-  // validity — is what makes an email required; an anonymous submission
+  // validity — is what makes a name and email required; an anonymous submission
   // (contact omitted entirely) is never blocked here.
   let cleanContact: ContactInfo | null = null
   if (contact != null) {
     cleanContact = sanitizeContact(contact)
     if (!cleanContact) {
-      return errorResponse(400, 'כתובת האימייל אינה תקינה.')
+      return errorResponse(400, 'נא למלא שם ואימייל תקין.')
     }
   }
 

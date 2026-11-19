@@ -145,11 +145,9 @@ describe('sanitizeContact', () => {
     expect(sanitizeContact({ name: 'דנה' })).toBeNull()
   })
 
-  it('accepts a valid email with no name — name stays optional', () => {
-    expect(sanitizeContact({ email: 'dana@example.com' })).toEqual({
-      name: null,
-      email: 'dana@example.com',
-    })
+  it('returns null when the name is missing or blank', () => {
+    expect(sanitizeContact({ email: 'dana@example.com' })).toBeNull()
+    expect(sanitizeContact({ name: '   ', email: 'dana@example.com' })).toBeNull()
   })
 
   it('accepts a non-English name alongside a valid email', () => {
@@ -160,7 +158,7 @@ describe('sanitizeContact', () => {
   })
 
   it('trims the email', () => {
-    expect(sanitizeContact({ email: '  dana@example.com  ' })?.email).toBe('dana@example.com')
+    expect(sanitizeContact({ name: 'דנה', email: '  dana@example.com  ' })?.email).toBe('dana@example.com')
   })
 })
 
@@ -316,7 +314,7 @@ describe('buildFeedbackEmail', () => {
     expect(email).not.toContain('מכשיר')
   })
 
-  it('includes contact details when present, name optional', () => {
+  it('includes contact details when present', () => {
     const withName = buildFeedbackEmail({
       type: 'idea',
       message: 'hi',
@@ -329,19 +327,6 @@ describe('buildFeedbackEmail', () => {
     })
     expect(withName).toContain('שם: דנה')
     expect(withName).toContain('אימייל: dana@example.com')
-
-    const withoutName = buildFeedbackEmail({
-      type: 'idea',
-      message: 'hi',
-      contact: { name: null, email: 'dana@example.com' },
-      gameContext: null,
-      device: null,
-      pageUrl: null,
-      userAgent: null,
-      timestamp: '2026-07-12T00:00:00.000Z',
-    })
-    expect(withoutName).not.toContain('שם:')
-    expect(withoutName).toContain('אימייל: dana@example.com')
   })
 
   it('includes only the game context fields that are present', () => {

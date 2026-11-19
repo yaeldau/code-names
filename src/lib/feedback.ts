@@ -80,21 +80,19 @@ export function isValidEmail(input: unknown): input is string {
 }
 
 export interface ContactInfo {
-  name: string | null
+  name: string
   email: string
 }
 
-/** Returns null both for a missing/malformed object and for one whose email
- * doesn't validate — callers that need to distinguish "no contact info sent"
+/** Returns null both for a missing/malformed object and for one whose name is
+ * missing or whose email doesn't validate — callers that need to distinguish "no contact info sent"
  * from "invalid contact info sent" check for the raw field's presence themselves. */
 export function sanitizeContact(input: unknown): ContactInfo | null {
   if (typeof input !== 'object' || input === null) return null
   const c = input as Record<string, unknown>
-  if (!isValidEmail(c.email)) return null
-  return {
-    name: sanitizeMetadata(c.name, MAX_NAME_LENGTH),
-    email: c.email.trim(),
-  }
+  const name = sanitizeMetadata(c.name, MAX_NAME_LENGTH)
+  if (!name || !isValidEmail(c.email)) return null
+  return { name, email: c.email.trim() }
 }
 
 // ─── Game context ───────────────────────────────────────────────────────────

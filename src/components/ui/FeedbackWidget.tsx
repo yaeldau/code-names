@@ -37,13 +37,15 @@ export default function FeedbackWidget() {
   const [contactName, setContactName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
+  const [nameTouched, setNameTouched] = useState(false)
   const [honeypot, setHoneypot] = useState('')
   const [status, setStatus] = useState<Status>('idle')
 
   const pathGameCode = pathname.match(/^\/game\/([A-Za-z0-9]+)/)?.[1]
   const busy = status === 'sending' || status === 'sent'
   const emailValid = isValidEmail(contactEmail)
-  const canSubmit = Boolean(message.trim()) && !busy && (!contactEnabled || emailValid)
+  const nameValid = Boolean(contactName.trim())
+  const canSubmit = Boolean(message.trim()) && !busy && (!contactEnabled || (nameValid && emailValid))
 
   function resetForm() {
     setMessage('')
@@ -52,13 +54,15 @@ export default function FeedbackWidget() {
     setContactName('')
     setContactEmail('')
     setEmailTouched(false)
+    setNameTouched(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = message.trim()
     if (!trimmed || busy) return
-    if (contactEnabled && !emailValid) {
+    if (contactEnabled && (!nameValid || !emailValid)) {
+      setNameTouched(true)
       setEmailTouched(true)
       return
     }
@@ -75,7 +79,7 @@ export default function FeedbackWidget() {
           pageUrl: pathname,
           gameContext: getGameFeedbackContext() ?? (pathGameCode ? { gameCode: pathGameCode } : null),
           device: readDeviceContext(),
-          contact: contactEnabled ? { name: contactName.trim() || undefined, email: contactEmail.trim() } : null,
+          contact: contactEnabled ? { name: contactName.trim(), email: contactEmail.trim() } : null,
         }),
       })
       if (!res.ok) throw new Error('request failed')
@@ -165,16 +169,24 @@ export default function FeedbackWidget() {
             <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-1">
                 <label htmlFor="feedback-name" className="text-[11px] text-gray-500">
-                  שם <span className="text-gray-400">(לא חובה)</span>
+                  שם
                 </label>
                 <input
                   id="feedback-name"
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+                  onBlur={() => setNameTouched(true)}
                   disabled={busy}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-60"
+                  required
+                  className={[
+                    'rounded-xl border bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 disabled:opacity-60',
+                    nameTouched && !nameValid ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-gray-300',
+                  ].join(' ')}
                 />
+                {nameTouched && !nameValid && (
+                  <p className="text-[11px] text-red-500">נא להזין שם</p>
+                )}
               </div>
               <div className="flex flex-col gap-1">
                 <label htmlFor="feedback-email" className="text-[11px] text-gray-500">
