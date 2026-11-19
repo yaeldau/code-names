@@ -31,7 +31,6 @@ export async function POST(request: Request) {
     return await handleFeedback(request)
   } catch (err) {
     console.error('[feedback] unhandled error', err)
-    console.error('feedback: unexpected error', err)
     return errorResponse(500)
   }
 }
@@ -124,7 +123,6 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
 
   if (rateLimitError) {
     console.error('[feedback] rate limit check failed', rateLimitError)
-    console.error('feedback: rate limit check failed', rateLimitError)
     return errorResponse(500)
   }
 
@@ -149,7 +147,6 @@ async function handleFeedback(request: Request): Promise<NextResponse> {
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
     console.error('[feedback] Resend API error', res.status, detail)
-    console.error(`feedback: Resend API error ${res.status}`)
     return errorResponse(502, 'שליחת ההודעה נכשלה. נסו שוב.')
   }
 
