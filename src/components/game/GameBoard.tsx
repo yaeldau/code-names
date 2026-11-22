@@ -14,9 +14,11 @@ import {
   createResyncScheduler,
   fetchGameSnapshot,
   reconcileResync,
+  sortClues,
   type ResyncScheduler,
 } from '@/lib/game-resync'
 import { saveEndTurn, saveReveal, type EndTurnOutcome, type RevealOutcome } from '@/lib/game-writes'
+import { pickActiveClue } from '@/lib/clue-submit'
 import type { Card, Clue, Game, Team } from '@/types/game'
 
 interface GameBoardProps {
@@ -416,6 +418,20 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
     afterAction({ resync: !outcome.saved, notify: !outcome.saved })
   }
 
+  // A clue the server confirmed (A2). Usually its Realtime INSERT event shows
+  // it too — whichever comes first wins, the other is a no-op (dedupe by id).
+  // This path matters when the event is late or was missed.
+  function handleClueSaved(clue: Clue) {
+    if (clue.game_id !== game.id) return
+    // Treated like a Realtime update so an A1 resync waits for it to commit
+    // instead of overwriting it with older committed state.
+    realtimeSeq.current += 1
+    setRenderedRealtimeSeq(realtimeSeq.current)
+    setClues((prev) => (prev.some((c) => c.id === clue.id) ? prev : sortClues([...prev, clue])))
+    // A late response must not override a newer turn or a newer clue.
+    setActiveClue((prev) => pickActiveClue(prev, clue, stateRef.current.game))
+  }
+
   // A failed optimistic action is rolled back by re-reading server state;
   // otherwise just let any resync deferred by this action run now.
   function afterAction({ resync, notify }: { resync: boolean; notify: boolean }) {
@@ -451,7 +467,13 @@ export default function GameBoard({ initialGame, initialCards, initialClues, isS
       </div>
 
       {/* ── Clue panel ── */}
-      <CluePanel game={game} isSpymaster={isSpymaster} activeClue={activeClue} />
+      <CluePanel
+        game={game}
+        isSpymaster={isSpymaster}
+        activeClue={activeClue}
+        onClueSaved={handleClueSaved}
+        onSyncNeeded={() => schedulerRef.current?.request('clue-failed')}
+      />
 
       {/* ── Board ── */}
       <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
