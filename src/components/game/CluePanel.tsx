@@ -1,7 +1,16 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import {
+  CLUE_MAX_LENGTH,
+  CLUE_MESSAGES,
+  createClueSubmitter,
+  findClue,
+  newClueId,
+  submitClue,
+  type SubmitterState,
+} from '@/lib/clue-submit'
 import type { Clue, Game } from '@/types/game'
 
 const TEAM_COLOR: Record<string, string> = {
@@ -19,28 +28,75 @@ const TEAM_BTN: Record<string, string> = {
   blue: 'bg-game-blue hover:bg-game-blue-dark',
 }
 
-interface CluePanelProps { game: Game; isSpymaster: boolean; activeClue: Clue | null }
+interface CluePanelProps {
+  game: Game
+  isSpymaster: boolean
+  activeClue: Clue | null
+  /** A clue was confirmed saved by the server (may arrive before or after Realtime). */
+  onClueSaved?: (clue: Clue) => void
+  /** Submission failed or its outcome is unknown — re-read server state. */
+  onSyncNeeded?: () => void
+}
 
-export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelProps) {
+export default function CluePanel({ game, isSpymaster, activeClue, onClueSaved, onSyncNeeded }: CluePanelProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const supabase = useMemo(() => createClient(), [])
+  const [state, setState] = useState<SubmitterState>({ sending: false, message: null })
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Latest callbacks, so the submitter (created once) never calls stale ones.
+  const callbacks = useRef({ onClueSaved, onSyncNeeded })
+  useEffect(() => { callbacks.current = { onClueSaved, onSyncNeeded } })
+
+  // One submitter per mounted form: it owns the in-flight guard and the
+  // retry id, so double clicks / repeated Enter can never insert twice.
+  const submitterRef = useRef<ReturnType<typeof createClueSubmitter> | null>(null)
+  useEffect(() => {
+    const submitter = createClueSubmitter({
+      submit: (draft) => submitClue(supabase, draft),
+      lookup: (id) => findClue(supabase, id),
+      newId: newClueId,
+      onState: setState,
+      onSaved: (clue) => {
+        // Clear only after the server confirmed the clue.
+        formRef.current?.reset()
+        callbacks.current.onClueSaved?.(clue)
+      },
+      onSyncNeeded: () => callbacks.current.onSyncNeeded?.(),
+    })
+    submitterRef.current = submitter
+    return () => {
+      submitter.dispose()
+      if (submitterRef.current === submitter) submitterRef.current = null
+    }
+  }, [supabase])
+
+  // Our clue may be confirmed by Realtime or an A1 resync instead of (or
+  // before) its own response — e.g. after a lost acknowledgment.
+  const activeClueId = activeClue?.id
+  useEffect(() => {
+    if (!activeClueId) return
+    if (submitterRef.current?.markConfirmed(activeClueId)) formRef.current?.reset()
+    // A clue is in play: an old error message no longer applies.
+    setState((s) => (s.sending || !s.message ? s : { sending: false, message: null }))
+  }, [activeClueId])
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (game.status !== 'active') return
     const formData = new FormData(e.currentTarget)
-    const word = (formData.get('word') as string)?.trim()
-    const count = parseInt(formData.get('count') as string ?? '1')
-    if (!word) return
-    formRef.current?.reset()
-    await supabase.from('clues').insert({
-      game_id: game.id, team: game.current_team, word, count: isNaN(count) ? 1 : count,
+    const count = parseInt((formData.get('count') as string) ?? '1')
+    void submitterRef.current?.submit({
+      gameId: game.id,
+      team: game.current_team,
+      word: (formData.get('word') as string) ?? '',
+      count: isNaN(count) ? 1 : count,
     })
   }
 
   const formHidden = activeClue !== null || game.status === 'finished'
 
   return (
+    <>
     <div className={`rounded-2xl border-2 bg-surface shadow-sm ${TEAM_BORDER[game.current_team]} relative h-16`}>
 
       {/* Spymaster form */}
@@ -54,6 +110,7 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
             name="word"
             placeholder="מילת רמז"
             required
+            maxLength={CLUE_MAX_LENGTH}
             autoComplete="off"
             dir="rtl"
             className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy/15 focus:border-navy/30 placeholder:text-ink-faint text-ink"
@@ -68,9 +125,11 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
           </select>
           <button
             type="submit"
-            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors ${TEAM_BTN[game.current_team]}`}
+            disabled={state.sending}
+            aria-busy={state.sending}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60 ${TEAM_BTN[game.current_team]}`}
           >
-            שלח
+            {state.sending ? 'שולח…' : 'שלח'}
           </button>
         </form>
       )}
@@ -92,5 +151,13 @@ export default function CluePanel({ game, isSpymaster, activeClue }: CluePanelPr
         </div>
       )}
     </div>
+
+    {/* Submission problems — only for the spymaster, only while the form is in use */}
+    {isSpymaster && state.message && !formHidden && (
+      <p role="alert" className="text-center text-xs font-medium text-game-red">
+        {CLUE_MESSAGES[state.message]}
+      </p>
+    )}
+    </>
   )
 }
