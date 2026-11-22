@@ -99,6 +99,11 @@ export default function HomePage() {
               </Link>{' '}
               אם אתם חדשים.
             </p>
+            <p className="mt-2 text-xs">
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-600">
+                סטטיסטיקת שימוש ופרטיות
+              </Link>
+            </p>
           </div>
         </section>
       </main>

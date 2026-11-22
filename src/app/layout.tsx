@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { Heebo } from 'next/font/google'
 import FeedbackWidget from '@/components/ui/FeedbackWidget'
+import PresenceBeacon from '@/components/ui/PresenceBeacon'
 import './globals.css'
+
+// Build-time flag: the beacon ships disabled until the analytics migration exists.
+const PRESENCE_ENABLED = process.env.NEXT_PUBLIC_PRESENCE_ENABLED === 'true'
 
 const heebo = Heebo({
   subsets: ['hebrew'],
@@ -60,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-bg font-sans antialiased">
         {children}
         <FeedbackWidget />
+        {PRESENCE_ENABLED && <PresenceBeacon />}
       </body>
 
     </html>
