@@ -22,6 +22,13 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <AdminHeader title="ניהול משחקים" />
 
+        <Link
+          href="/admin/live"
+          className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-navy hover:bg-bg transition-colors"
+        >
+          פעילות חיה — מי באתר עכשיו ←
+        </Link>
+
         {/* Exact DB counts, independent of the paginated list below — game
             history is retained intentionally, not a short-lived snapshot. */}
         <div className="grid grid-cols-3 gap-3 text-center">
