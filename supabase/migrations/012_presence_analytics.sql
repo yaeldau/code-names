@@ -24,13 +24,17 @@
 --   * presence rate-limit buckets: 1 hour;
 --   * analytics_daily: aggregate counts only, kept (they hold no personal data).
 -- Cleanup runs when a new tab appears (index range delete), so stale rows are
--- removed even at low traffic.
+-- removed even at low traffic; concurrent new tabs skip it rather than wait.
 --
--- Cost guard: every heartbeat increments today's counter; above the configured
--- daily budget (analytics_settings.daily_beat_cap) — or when the kill switch
--- analytics_settings.paused is on — the heartbeat answers 'paused' and the
--- browser stops sending for the rest of that page load. Presence can therefore
--- never consume more than the budget of serverless invocations per day.
+-- Cost guard (soft): every heartbeat is counted in today's row; once the
+-- configured daily budget (analytics_settings.daily_beat_cap) is reached — or
+-- while the kill switch analytics_settings.paused is on — the heartbeat
+-- answers 'paused', the route returns 429 and the browser stops sending for the
+-- rest of that page load. This bounds well-behaved clients only: every request
+-- that reaches the app is still a serverless invocation, whatever it returns.
+-- The budget is checked with a plain read, and each heartbeat writes one of 8
+-- per-day counter slots once, as its last statement, so heartbeats don't
+-- serialize on a single row.
 --
 -- Trust model: browsers never talk to these tables. /api/presence validates the
 -- request and calls analytics_heartbeat() with the service role; /admin reads
@@ -57,12 +61,17 @@ CREATE TABLE IF NOT EXISTS public.analytics_presence (
 CREATE INDEX IF NOT EXISTS idx_analytics_presence_last_seen ON public.analytics_presence (last_seen);
 CREATE INDEX IF NOT EXISTS idx_analytics_presence_game ON public.analytics_presence (game_id, last_seen) WHERE game_id IS NOT NULL;
 
--- Aggregate counters per Israel calendar day. No identifiers.
+-- Aggregate counters per Israel calendar day. No identifiers. Each day is
+-- split over 8 slots (a heartbeat adds to a random one; readers sum them), so
+-- concurrent heartbeats don't queue on a single hot row — measured: with one
+-- row, 100 simultaneous heartbeats serialized on its row lock.
 CREATE TABLE IF NOT EXISTS public.analytics_daily (
-  day          date    PRIMARY KEY,
-  visits       integer NOT NULL DEFAULT 0,  -- tab sessions started (page loads that reported)
-  room_entries integer NOT NULL DEFAULT 0,  -- a tab entering a game room
-  beats        integer NOT NULL DEFAULT 0   -- heartbeat requests (cost tracking)
+  day          date     NOT NULL,
+  slot         smallint NOT NULL DEFAULT 0 CHECK (slot BETWEEN 0 AND 7),
+  visits       integer  NOT NULL DEFAULT 0,  -- tab sessions started (page loads that reported)
+  room_entries integer  NOT NULL DEFAULT 0,  -- a tab entering a game room
+  beats        integer  NOT NULL DEFAULT 0,  -- heartbeat requests (cost tracking)
+  PRIMARY KEY (day, slot)
 );
 
 -- Single-row settings: daily budget and an emergency off switch, adjustable
@@ -116,14 +125,18 @@ SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
-  v_today   date := (now() AT TIME ZONE 'Asia/Jerusalem')::date;
-  v_beats   integer;
-  v_cap     integer;
-  v_paused  boolean;
-  v_game    uuid;
-  v_page    text := p_page;
+  v_today    date := (now() AT TIME ZONE 'Asia/Jerusalem')::date;
+  v_beats    integer;
+  v_cap      integer;
+  v_paused   boolean;
+  v_game     uuid;
+  v_page     text := p_page;
   v_inserted boolean;
-  v_row     public.analytics_presence%ROWTYPE;
+  v_found    boolean;
+  v_row      public.analytics_presence%ROWTYPE;
+  v_result   text;
+  v_visit    integer := 0;
+  v_entry    integer := 0;
 BEGIN
   IF p_tab IS NULL THEN RAISE EXCEPTION 'analytics: missing id' USING ERRCODE = '22023'; END IF;
   IF p_page NOT IN ('home', 'game', 'how_to_play', 'other') THEN
@@ -132,76 +145,93 @@ BEGIN
   IF p_ip_bucket IS NULL OR p_ip_bucket !~ '^[0-9a-f]{64}$' THEN
     RAISE EXCEPTION 'analytics: bad bucket' USING ERRCODE = '22023';
   END IF;
+  IF p_page = 'game' AND NOT p_leave AND (p_game_code IS NULL OR p_game_code !~ '^[A-Z0-9]{4,8}$') THEN
+    RAISE EXCEPTION 'analytics: bad game code' USING ERRCODE = '22023';
+  END IF;
 
-  -- Cost guard first: every request counts against today's budget.
+  -- Kill switch: answer without writing anything.
   SELECT daily_beat_cap, paused INTO v_cap, v_paused FROM public.analytics_settings WHERE id;
   IF v_paused IS DISTINCT FROM false THEN RETURN 'paused'; END IF;
-  INSERT INTO public.analytics_daily AS d (day, beats) VALUES (v_today, 1)
-  ON CONFLICT (day) DO UPDATE SET beats = d.beats + 1
-  RETURNING beats INTO v_beats;
-  IF v_beats > v_cap THEN RETURN 'paused'; END IF;
 
-  IF p_leave THEN
-    -- Tombstone the tab — also when its first beat hasn't landed yet (closed
-    -- within a second of opening), so that late beat is ignored too.
-    INSERT INTO public.analytics_presence AS p (tab_id, page, game_id, visible, left_at)
-    VALUES (p_tab, 'other', NULL, false, now())
-    ON CONFLICT (tab_id) DO UPDATE SET left_at = now();
-    RETURN 'left';
-  END IF;
+  <<work>>
+  BEGIN
+    -- Budget check is a plain read (no row lock). Concurrent requests may
+    -- overshoot the cap by a handful — acceptable for a soft budget, and it
+    -- keeps the shared per-day row from serializing every heartbeat.
+    SELECT sum(beats) INTO v_beats FROM public.analytics_daily WHERE day = v_today;
+    IF COALESCE(v_beats, 0) >= v_cap THEN v_result := 'paused'; EXIT work; END IF;
 
-  IF p_page = 'game' THEN
-    IF p_game_code IS NULL OR p_game_code !~ '^[A-Z0-9]{4,8}$' THEN
-      RAISE EXCEPTION 'analytics: bad game code' USING ERRCODE = '22023';
+    IF p_leave THEN
+      -- Tombstone the tab — also when its first beat hasn't landed yet (closed
+      -- within a second of opening), so that late beat is ignored too.
+      INSERT INTO public.analytics_presence AS p (tab_id, page, game_id, visible, left_at)
+      VALUES (p_tab, 'other', NULL, false, now())
+      ON CONFLICT (tab_id) DO UPDATE SET left_at = now();
+      v_result := 'left'; EXIT work;
     END IF;
-    SELECT id INTO v_game FROM public.games WHERE code = p_game_code;
-    -- A game page for a code that doesn't exist is just "other".
-    IF v_game IS NULL THEN v_page := 'other'; END IF;
-  END IF;
 
-  SELECT * INTO v_row FROM public.analytics_presence WHERE tab_id = p_tab;
-  IF FOUND AND v_row.left_at IS NOT NULL AND v_row.left_at > now() - interval '5 seconds' THEN
-    -- A beat that was already in flight when the tab closed: ignore it.
-    RETURN 'left';
-  END IF;
-  IF NOT FOUND THEN
-    -- Abuse bound for new tab ids, per (keyed, daily-rotating) IP bucket.
-    IF NOT public.check_feedback_rate_limit('presence-tab:' || p_ip_bucket, 120, 600) THEN
-      RETURN 'rate_limited';
+    IF p_page = 'game' THEN
+      SELECT id INTO v_game FROM public.games WHERE code = p_game_code;
+      -- A game page for a code that doesn't exist is just "other".
+      IF v_game IS NULL THEN v_page := 'other'; END IF;
     END IF;
-    PERFORM public.analytics_cleanup();
-  ELSIF v_row.left_at IS NULL AND v_row.last_seen > now() - interval '5 seconds'
-    AND v_row.page = v_page AND v_row.game_id IS NOT DISTINCT FROM v_game AND v_row.visible = p_visible THEN
-    -- Nothing changed and it was just written: don't write again.
-    RETURN 'throttled';
-  END IF;
 
-  INSERT INTO public.analytics_presence AS p (tab_id, page, game_id, visible)
-  VALUES (p_tab, v_page, v_game, p_visible)
-  ON CONFLICT (tab_id) DO UPDATE SET
-    page      = EXCLUDED.page,
-    game_id   = EXCLUDED.game_id,
-    visible   = EXCLUDED.visible,
-    left_at   = NULL,           -- a later beat (e.g. page restored from bfcache) revives the tab
-    last_seen = now()
-  -- Evaluated on the locked, latest row version: a leave committed by a
-  -- concurrent request always wins over a regular beat racing it.
-  WHERE p.left_at IS NULL OR p.left_at < now() - interval '5 seconds'
-  -- xmax = 0 only for a freshly inserted row: exactly one of several racing
-  -- first beats of the same tab sees true, so a visit is counted once.
-  RETURNING (xmax = 0) INTO v_inserted;
+    SELECT * INTO v_row FROM public.analytics_presence WHERE tab_id = p_tab;
+    v_found := FOUND;
+    IF v_found AND v_row.left_at IS NOT NULL AND v_row.left_at > now() - interval '5 seconds' THEN
+      -- A beat that was already in flight when the tab closed: ignore it.
+      v_result := 'left'; EXIT work;
+    END IF;
+    IF NOT v_found THEN
+      -- Abuse bound for new tab ids, per (keyed, daily-rotating) IP bucket.
+      IF NOT public.check_feedback_rate_limit('presence-tab:' || p_ip_bucket, 120, 600) THEN
+        v_result := 'rate_limited'; EXIT work;
+      END IF;
+      -- Opportunistic retention, never waited on: if another heartbeat is
+      -- already cleaning up, skip (non-blocking transaction-level try-lock).
+      IF pg_try_advisory_xact_lock(hashtext('public.analytics_cleanup')) THEN
+        PERFORM public.analytics_cleanup();
+      END IF;
+    ELSIF v_row.left_at IS NULL AND v_row.last_seen > now() - interval '5 seconds'
+      AND v_row.page = v_page AND v_row.game_id IS NOT DISTINCT FROM v_game AND v_row.visible = p_visible THEN
+      -- Nothing changed and it was just written: don't write again.
+      v_result := 'throttled'; EXIT work;
+    END IF;
 
-  IF v_inserted IS NULL THEN RETURN 'left'; END IF;  -- blocked by a fresh tombstone
+    INSERT INTO public.analytics_presence AS p (tab_id, page, game_id, visible)
+    VALUES (p_tab, v_page, v_game, p_visible)
+    ON CONFLICT (tab_id) DO UPDATE SET
+      page      = EXCLUDED.page,
+      game_id   = EXCLUDED.game_id,
+      visible   = EXCLUDED.visible,
+      left_at   = NULL,           -- a later beat (e.g. page restored from bfcache) revives the tab
+      last_seen = now()
+    -- Evaluated on the locked, latest row version: a leave committed by a
+    -- concurrent request always wins over a regular beat racing it.
+    WHERE p.left_at IS NULL OR p.left_at < now() - interval '5 seconds'
+    -- xmax = 0 only for a freshly inserted row: exactly one of several racing
+    -- first beats of the same tab sees true, so a visit is counted once.
+    RETURNING (xmax = 0) INTO v_inserted;
 
-  -- Aggregate history (numbers only).
-  IF v_inserted OR (v_game IS NOT NULL AND v_row.tab_id IS NOT NULL AND v_row.game_id IS DISTINCT FROM v_game) THEN
-    UPDATE public.analytics_daily SET
-      visits       = visits + CASE WHEN v_inserted THEN 1 ELSE 0 END,
-      room_entries = room_entries + CASE WHEN v_game IS NOT NULL THEN 1 ELSE 0 END
-    WHERE day = v_today;
-  END IF;
+    IF v_inserted IS NULL THEN v_result := 'left'; EXIT work; END IF;  -- blocked by a fresh tombstone
 
-  RETURN 'ok';
+    IF v_inserted THEN v_visit := 1; END IF;
+    IF v_game IS NOT NULL AND (v_inserted OR (v_found AND v_row.game_id IS DISTINCT FROM v_game)) THEN
+      v_entry := 1;
+    END IF;
+    v_result := 'ok';
+  END;
+
+  -- One write to a random per-day slot, as the LAST statement (its row lock is
+  -- held only until commit): concurrent heartbeats rarely touch the same row.
+  INSERT INTO public.analytics_daily AS d (day, slot, beats, visits, room_entries)
+  VALUES (v_today, floor(random() * 8)::smallint, 1, v_visit, v_entry)
+  ON CONFLICT (day, slot) DO UPDATE SET
+    beats        = d.beats + 1,
+    visits       = d.visits + EXCLUDED.visits,
+    room_entries = d.room_entries + EXCLUDED.room_entries;
+
+  RETURN v_result;
 END;
 $$;
 

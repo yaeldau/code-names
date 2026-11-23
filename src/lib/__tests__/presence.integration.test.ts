@@ -86,7 +86,7 @@ describeIntegration('D1/E1 presence — local Supabase', () => {
     await beat(at(tab, 'home'))
     expect(Object.keys((await rowOf(tab))!).sort()).toEqual(['first_seen', 'game_id', 'last_seen', 'left_at', 'page', 'tab_id', 'visible'])
     const { data } = await service.from('analytics_daily').select('*').limit(1).single()
-    expect(Object.keys(data!).sort()).toEqual(['beats', 'day', 'room_entries', 'visits'])
+    expect(Object.keys(data!).sort()).toEqual(['beats', 'day', 'room_entries', 'slot', 'visits'])
   })
 
   // ── Occupancy ─────────────────────────────────────────────────────────────
